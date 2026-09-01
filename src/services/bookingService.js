@@ -1,0 +1,29 @@
+import { api } from "@/lib/api";
+
+export const bookingService = {
+  async getBookings() {
+    const res = await api.get("/bookings");
+    return res.data;
+  },
+
+  async getBooking(id) {
+    const res = await api.get(`/bookings/${id}`);
+    return res.data;
+  },
+
+  async createBooking(data) {
+    const res = await api.post("/bookings", data);
+    return res.data;
+  },
+
+  async getCatererBookings() {
+    const res = await api.get("/bookings/caterer/all");
+    return res.data;
+  },
+
+  async deleteBooking(id) {
+    const res = await api.delete(`/bookings/${id}`);
+    return res.data;
+  },
+};
+
