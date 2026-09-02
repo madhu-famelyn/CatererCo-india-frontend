@@ -44,7 +44,7 @@ export default function CatererProfile() {
     email: "",
     phone: "",
     address: "",
-    emirate: "Dubai",
+    emirate: "Hyderabad",
     about: "",
     min_order_plates: 0,
     google_rating: "",
@@ -170,7 +170,7 @@ export default function CatererProfile() {
         email: profile.email || user?.email || "",
         phone: profile.phone || "",
         address: profile.address || "",
-        emirate: profile.emirate || "Dubai",
+        emirate: profile.emirate || "Hyderabad",
         about: profile.about || "",
         min_order_plates: profile.min_order_plates ?? 0,
         google_rating: profile.google_rating ?? "",
@@ -332,8 +332,16 @@ export default function CatererProfile() {
               <Field label="Phone">
                 <Input name="phone" value={formData.phone ?? ""} onChange={handleChange} />
               </Field>
-              <Field label="Emirate">
-                <Input name="emirate" value={formData.emirate ?? ""} onChange={handleChange} />
+              <Field label="City">
+                <select
+                  name="emirate"
+                  value={formData.emirate ?? "Hyderabad"}
+                  onChange={handleChange}
+                  className="h-11 w-full rounded-lg border border-input bg-surface px-3 text-sm focus:outline-none focus:border-[var(--primary)] text-foreground"
+                >
+                  <option value="Hyderabad">Hyderabad</option>
+                  <option value="Bangalore">Bangalore (Bengaluru)</option>
+                </select>
               </Field>
               <Field label="Business address">
                 <Input name="address" value={formData.address ?? ""} onChange={handleChange} />
@@ -839,7 +847,7 @@ export default function CatererProfile() {
               ) : (
                 <>
                   <Badge variant="success">HACCP</Badge>
-                  <Badge variant="success">Halal Certified</Badge>
+                  <Badge variant="success">FSSAI Registered</Badge>
                 </>
               )}
             </div>

@@ -171,6 +171,9 @@ export default function CatererRegister() {
         password: data.password,
         cuisine_types: selectedCuisines,
         min_order_plates: data.min_order_plates !== "" && !isNaN(Number(data.min_order_plates)) ? Number(data.min_order_plates) : 0,
+        google_rating: data.google_rating !== "" && !isNaN(Number(data.google_rating)) ? Number(data.google_rating) : undefined,
+        years_in_business: data.years_in_business !== "" && !isNaN(Number(data.years_in_business)) ? Number(data.years_in_business) : undefined,
+        orders_delivered: data.orders_delivered !== "" && !isNaN(Number(data.orders_delivered)) ? Number(data.orders_delivered) : undefined,
         is_eco_friendly: isEcoFriendly,
         eco_practices: isEcoFriendly ? ["iso_14001"] : [],
         iso_14001_certified: isEcoFriendly,
@@ -297,6 +300,38 @@ export default function CatererRegister() {
             </span>
           </div>
         </Field>
+
+        {/* ── Credibility & Track Record ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Field label="Google Rating (out of 5)">
+            <Input
+              type="number"
+              step="0.1"
+              min="1"
+              max="5"
+              placeholder="e.g. 4.8"
+              {...register("google_rating")}
+            />
+          </Field>
+
+          <Field label="Years in business">
+            <Input
+              type="number"
+              min="0"
+              placeholder="e.g. 8"
+              {...register("years_in_business")}
+            />
+          </Field>
+
+          <Field label="Total orders delivered">
+            <Input
+              type="number"
+              min="0"
+              placeholder="e.g. 1500"
+              {...register("orders_delivered")}
+            />
+          </Field>
+        </div>
 
         {/* ── Cuisine Specialisation Selector ─────────────────────────── */}
         <div>

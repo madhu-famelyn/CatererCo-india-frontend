@@ -81,14 +81,14 @@ export default function CatererDetail() {
     starting_from: 65,
     cover: "https://images.unsplash.com/photo-1555244162-803834f70033?w=800",
     about: "Premium boutique catering specializing in luxury weddings, VIP corporate banquets, and authentic Emirati & International fine dining.",
-    certifications: ["ISO 22000 Food Safety", "HACCP Certified", "Halal Certified"],
-    emirate: "Dubai",
+    certifications: ["ISO 22000 Food Safety", "HACCP Certified", "FSSAI Registered"],
+    emirate: "Hyderabad",
     is_verified: true,
   };
 
   const startingPrice = c.starting_from || c.startingFrom || 65;
-  const tagsList = c.tags || ["Luxury", "Emirati", "Weddings"];
-  const certsList = c.certifications || ["HACCP Certified", "Halal Certified"];
+  const tagsList = c.tags || ["Luxury", "Weddings"];
+  const certsList = c.certifications || ["HACCP Certified", "FSSAI Registered"];
 
   return (
     <div className="min-h-screen bg-background pb-16">
@@ -268,11 +268,6 @@ export default function CatererDetail() {
                           <div className="font-medium text-foreground">{item.name}</div>
                           <div className="flex items-center gap-1 mt-0.5 flex-wrap">
                             {item.veg && <Badge variant="success" className="text-[9px] px-1.5 py-0">Veg</Badge>}
-                            {(item.is_halal ?? item.halal) && (
-                              <span className="inline-flex items-center gap-0.5 rounded-full bg-teal-500/10 px-1.5 py-0 text-[9px] font-semibold text-teal-600 border border-teal-500/20">
-                                <ShieldCheck className="h-2.5 w-2.5" /> Halal
-                              </span>
-                            )}
                             {(item.is_spicy ?? item.spicy) && (
                               <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-500/10 px-1.5 py-0 text-[9px] font-semibold text-orange-600 border border-orange-500/20">
                                 <Flame className="h-2.5 w-2.5" /> Spicy

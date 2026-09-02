@@ -1,5 +1,5 @@
 import { Outlet, Navigate } from "react-router-dom";
-import { LayoutDashboard, Calendar, ChefHat, PlusSquare, FileCheck, Users, BarChart3, ImageIcon, Building2, Wand2 } from "lucide-react";
+import { LayoutDashboard, Calendar, ChefHat, FileCheck, Users, BarChart3, ImageIcon, Building2, Wand2 } from "lucide-react";
 import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
 import { Topbar } from "@/components/layout/Topbar";
 import { useAuth } from "@/store/authStore";
@@ -8,9 +8,8 @@ const items = [
   { to: "/caterer", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/caterer/bookings", label: "Bookings", icon: Calendar },
   { to: "/caterer/quotations", label: "Quotations", icon: FileCheck },
-  { to: "/caterer/menu", label: "Menu", icon: ChefHat },
-  { to: "/caterer/packages", label: "Generate Package", icon: Wand2 },
-  { to: "/caterer/dishes", label: "Dishes", icon: PlusSquare },
+  { to: "/caterer/menu", label: "Master Menu", icon: ChefHat },
+  { to: "/caterer/packages", label: "AI Generate Package", icon: Wand2 },
   { to: "/caterer/addons", label: "Add-ons", icon: Users },
   { to: "/caterer/gallery", label: "Gallery", icon: ImageIcon },
   { to: "/caterer/profile", label: "Business Profile", icon: Building2 },

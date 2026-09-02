@@ -2,16 +2,396 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import * as XLSX from "xlsx";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Card } from "@/components/ui/Card";
 import {
   Wand2, Sparkles, Loader2, AlertCircle, Star, Package,
   ChevronRight, RefreshCw, Copy, CheckCircle2, ChefHat, Info, ChevronDown, ChevronUp, Layers, Save,
-  Plus, Minus, Check, CheckSquare, Square, ListFilter, Calculator, CheckCheck, Eye, Trash2, X
+  Plus, Minus, Check, CheckSquare, Square, ListFilter, Calculator, CheckCheck, Eye, Trash2, X,
+  Download, FileSpreadsheet, FileText, Share2
 } from "lucide-react";
 
 import { menuService } from "@/services/menuService";
 import { catererService } from "@/services/catererService";
+
+// ── Export to Excel (.xlsx) ──────────────────────────────────────────────────
+function exportPackagesToExcel(packagesList, catererName = "Caterer") {
+  if (!packagesList || packagesList.length === 0) {
+    toast.error("No packages to export");
+    return;
+  }
+
+  try {
+    // 1. Summary Sheet
+    const summaryData = packagesList.map((pkg, idx) => {
+      const vegCount = pkg.dishes?.filter((d) => d.isVeg).length || 0;
+      const nonVegCount = (pkg.dishes?.length || 0) - vegCount;
+      return {
+        "Package #": idx + 1,
+        "Package Name": pkg.name,
+        "Rate / Person (INR)": pkg.pricePerPerson,
+        "Tagline": pkg.tagline || "",
+        "Best For Event": pkg.bestFor || "All Events",
+        "Total Courses / Items": pkg.dishes?.length || 0,
+        "Veg Items": vegCount,
+        "Non-Veg Items": nonVegCount,
+        "Key Highlight": pkg.highlight || "",
+      };
+    });
+
+    // 2. Full Course Breakdown Sheet
+    const menuData = [];
+    packagesList.forEach((pkg, idx) => {
+      (pkg.dishes || []).forEach((dish) => {
+        menuData.push({
+          "Package #": idx + 1,
+          "Package Name": pkg.name,
+          "Package Rate (INR)": pkg.pricePerPerson,
+          "Course / Category": dish.category || "General Course",
+          "Dish Name": dish.name,
+          "Dietary Type": dish.isVeg ? "Vegetarian (Veg)" : "Non-Vegetarian (Non-Veg)",
+          "Cuisine": dish.cuisine || "Indian",
+          "Item Price (INR)": dish.price || "Included",
+        });
+      });
+    });
+
+    const wb = XLSX.utils.book_new();
+    const wsSummary = XLSX.utils.json_to_sheet(summaryData);
+    const wsMenu = XLSX.utils.json_to_sheet(menuData);
+
+    XLSX.utils.book_append_sheet(wb, wsSummary, "Packages Summary");
+    XLSX.utils.book_append_sheet(wb, wsMenu, "Menu Items Breakdown");
+
+    const cleanName = catererName.replace(/[^a-z0-9]/gi, "_") || "Caterer";
+    const dateStr = new Date().toISOString().split("T")[0];
+    const fileName = `${cleanName}_Catering_Packages_${dateStr}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    toast.success(`Excel file downloaded: ${fileName}`);
+  } catch (err) {
+    console.error("Excel export error:", err);
+    toast.error("Failed to generate Excel file.");
+  }
+}
+
+function exportSinglePackageToExcel(pkg, catererName = "Caterer") {
+  if (!pkg) return;
+  exportPackagesToExcel([pkg], `${catererName}_${pkg.name}`);
+}
+
+// ── Export to Printable PDF ──────────────────────────────────────────────────
+function exportPackagesToPdf(packagesList, catererName = "CatererCo Partner") {
+  if (!packagesList || packagesList.length === 0) {
+    toast.error("No packages to export");
+    return;
+  }
+
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) {
+    toast.error("Popup blocked! Please allow popups to open PDF proposal.");
+    return;
+  }
+
+  const today = new Date().toLocaleDateString("en-IN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>${catererName} - Catering Menu Packages Proposal</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #1a1a1a;
+      background: #ffffff;
+      padding: 40px;
+      line-height: 1.5;
+    }
+    @media print {
+      body { padding: 15px; }
+      .page-break { page-break-after: always; }
+      .no-print { display: none !important; }
+    }
+    .header {
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .brand-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: #b8860b;
+      letter-spacing: -0.5px;
+    }
+    .brand-subtitle {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+    .meta-box {
+      text-align: right;
+      font-size: 12px;
+      color: #4b5563;
+      line-height: 1.6;
+    }
+    .pkg-card {
+      border: 1.5px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 30px;
+      background: #fafafa;
+      page-break-inside: avoid;
+    }
+    .pkg-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1.5px solid #e5e7eb;
+      padding-bottom: 16px;
+      margin-bottom: 16px;
+    }
+    .pkg-name {
+      font-size: 20px;
+      font-weight: 800;
+      color: #111827;
+    }
+    .pkg-tagline {
+      font-size: 13px;
+      color: #6b7280;
+      font-style: italic;
+      margin-top: 3px;
+    }
+    .pkg-price-badge {
+      background: #111827;
+      color: #ffffff;
+      padding: 8px 18px;
+      border-radius: 12px;
+      text-align: right;
+    }
+    .pkg-price {
+      font-size: 22px;
+      font-weight: 800;
+      color: #d4a017;
+    }
+    .pkg-price-sub {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #d1d5db;
+    }
+    .stats-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 18px;
+      font-size: 12px;
+      font-weight: 600;
+      flex-wrap: wrap;
+    }
+    .stat-chip {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      padding: 4px 12px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .stat-veg { color: #059669; border-color: #a7f3d0; background: #ecfdf5; }
+    .stat-nonveg { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
+    .course-section {
+      margin-bottom: 14px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 14px 18px;
+    }
+    .course-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #b8860b;
+      margin-bottom: 10px;
+      border-bottom: 1px dashed #e5e7eb;
+      padding-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .dishes-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px 20px;
+    }
+    .dish-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 4px 0;
+    }
+    .dish-name {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      color: #1f2937;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .dot-veg { background: #10b981; }
+    .dot-nonveg { background: #ef4444; }
+    .cuisine-tag {
+      font-size: 10px;
+      color: #6b7280;
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #9ca3af;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .btn-print {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #b8860b;
+      color: #ffffff;
+      border: none;
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-print:hover { background: #996515; }
+  </style>
+</head>
+<body>
+  <button class="btn-print no-print" onclick="window.print()">
+    🖨️ Save as PDF / Print
+  </button>
+
+  <div class="header">
+    <div>
+      <div class="brand-title">${catererName}</div>
+      <div class="brand-subtitle">Curated Catering Package Proposal & Menu Options</div>
+    </div>
+    <div class="meta-box">
+      <div><strong>Date:</strong> ${today}</div>
+      <div><strong>Platform:</strong> CatererCo India</div>
+      <div><strong>Currency:</strong> INR (₹)</div>
+    </div>
+  </div>
+
+  ${packagesList.map((pkg, idx) => {
+    const vegCount = pkg.dishes?.filter(d => d.isVeg).length || 0;
+    const nonVegCount = (pkg.dishes?.length || 0) - vegCount;
+
+    // Group dishes by category
+    const grouped = {};
+    (pkg.dishes || []).forEach(d => {
+      const cat = d.category || "General Course";
+      if (!grouped[cat]) grouped[cat] = [];
+      grouped[cat].push(d);
+    });
+
+    return `
+    <div class="pkg-card ${idx < packagesList.length - 1 ? 'page-break' : ''}">
+      <div class="pkg-header">
+        <div>
+          <div class="pkg-name">Package ${idx + 1}: ${pkg.name}</div>
+          <div class="pkg-tagline">${pkg.tagline ? `"${pkg.tagline}"` : (pkg.bestFor ? `Best for: ${pkg.bestFor}` : "")}</div>
+        </div>
+        <div class="pkg-price-badge">
+          <div class="pkg-price">₹${pkg.pricePerPerson}</div>
+          <div class="pkg-price-sub">per person</div>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <span class="stat-chip"><strong>${pkg.dishes?.length || 0}</strong> Total Items</span>
+        <span class="stat-chip stat-veg"><span class="dot dot-veg"></span> <strong>${vegCount}</strong> Veg</span>
+        ${nonVegCount > 0 ? `<span class="stat-chip stat-nonveg"><span class="dot dot-nonveg"></span> <strong>${nonVegCount}</strong> Non-Veg</span>` : ''}
+        ${pkg.bestFor ? `<span class="stat-chip"><strong>Event:</strong> ${pkg.bestFor}</span>` : ''}
+        ${pkg.highlight ? `<span class="stat-chip"><strong>Specialty:</strong> ${pkg.highlight}</span>` : ''}
+      </div>
+
+      <div class="courses-container">
+        ${Object.entries(grouped).map(([categoryName, dishes]) => `
+          <div class="course-section">
+            <div class="course-title">
+              <span>${categoryName}</span>
+              <span style="font-size: 11px; font-weight: normal; color: #6b7280;">${dishes.length} item${dishes.length !== 1 ? 's' : ''}</span>
+            </div>
+            <div class="dishes-grid">
+              ${dishes.map(dish => `
+                <div class="dish-item">
+                  <span class="dish-name">
+                    <span class="dot ${dish.isVeg ? 'dot-veg' : 'dot-nonveg'}"></span>
+                    ${dish.name}
+                  </span>
+                  ${dish.cuisine ? `<span class="cuisine-tag">${dish.cuisine}</span>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    `;
+  }).join('')}
+
+  <div class="footer">
+    <div>Prepared by ${catererName} · Verified Partner on CatererCo India</div>
+    <div>Prices quoted in Indian Rupees (₹) inclusive of catering preparation.</div>
+  </div>
+
+  <script>
+    window.onload = function() {
+      setTimeout(function() {
+        window.print();
+      }, 400);
+    };
+  </script>
+</body>
+</html>
+  `;
+
+  printWindow.document.open();
+  printWindow.document.write(htmlContent);
+  printWindow.document.close();
+}
 
 
 const DEFAULT_CUISINES = [
@@ -680,8 +1060,8 @@ Respond ONLY with valid JSON. Format:
   return (
     <>
       <PageHeader
-        title="Generate Menu Package"
-        description="Use AI to instantly create professional catering packages from your menu."
+        title="AI Generate Package"
+        description="Use AI to instantly create professional catering packages from your master menu."
       />
 
       {/* Stats banner */}
@@ -692,7 +1072,7 @@ Respond ONLY with valid JSON. Format:
             {totalDishes > 0 ? (
               <>AI will use your <strong className="text-foreground">{totalDishes} dishes</strong> across <strong className="text-foreground">{Object.keys(menu).length} categories</strong> to build smart packages tailored to your menu.</>
             ) : (
-              <>You haven&apos;t added any dishes yet. <a href="/caterer/menu" className="font-semibold text-[var(--primary)] underline underline-offset-2">Go to Menu</a> to add dishes, or AI will generate curated Indian packages for you.</>
+              <>You haven&apos;t added any dishes yet. <a href="/caterer/menu" className="font-semibold text-[var(--primary)] underline underline-offset-2">Go to Master Menu</a> to add dishes, or AI will generate curated Indian packages for you.</>
             )}
           </span>
         </div>
@@ -792,8 +1172,8 @@ Respond ONLY with valid JSON. Format:
                       key={c}
                       onClick={() => toggleCuisine(c)}
                       className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer select-none text-xs transition-colors ${isChecked
-                          ? "bg-[color-mix(in_oklab,var(--primary)_12%,transparent)] text-[var(--primary)] font-bold"
-                          : "text-foreground hover:bg-muted/80"
+                        ? "bg-[color-mix(in_oklab,var(--primary)_12%,transparent)] text-[var(--primary)] font-bold"
+                        : "text-foreground hover:bg-muted/80"
                         }`}
                     >
                       <input
@@ -1112,20 +1492,45 @@ Respond ONLY with valid JSON. Format:
             <span className="ml-1 inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
               {savedPackages.length} active
             </span>
-            <span className="text-xs text-muted-foreground">— visible to customers during booking</span>
-            <button
-              onClick={async () => {
-                if (!confirm("Remove ALL saved packages?")) return;
-                try {
-                  await catererService.savePackages(catererId, []);
-                  refetchSaved();
-                  toast.success("All packages cleared.");
-                } catch { toast.error("Failed to clear packages."); }
-              }}
-              className="ml-auto text-xs font-semibold text-rose-500 hover:text-rose-600 border border-rose-400/30 rounded-lg px-3 py-1 hover:bg-rose-500/5 transition"
-            >
-              Clear All
-            </button>
+            <span className="text-xs text-muted-foreground hidden sm:inline">— visible to customers during booking</span>
+
+            <div className="ml-auto flex items-center gap-2 flex-wrap">
+              {/* Download All Saved as PDF */}
+              <button
+                type="button"
+                onClick={() => exportPackagesToPdf(savedPackages, profile?.name || "Caterer")}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 text-xs font-bold px-3 py-1.5 shadow-xs transition"
+                title="Download all saved packages as a printable PDF proposal"
+              >
+                <FileText className="h-3.5 w-3.5 text-rose-500" />
+                <span>Download PDF</span>
+              </button>
+
+              {/* Download All Saved as Excel */}
+              <button
+                type="button"
+                onClick={() => exportPackagesToExcel(savedPackages, profile?.name || "Caterer")}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold px-3 py-1.5 shadow-xs transition"
+                title="Download all saved packages as Excel spreadsheet"
+              >
+                <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
+                <span>Download Excel</span>
+              </button>
+
+              <button
+                onClick={async () => {
+                  if (!confirm("Remove ALL saved packages?")) return;
+                  try {
+                    await catererService.savePackages(catererId, []);
+                    refetchSaved();
+                    toast.success("All packages cleared.");
+                  } catch { toast.error("Failed to clear packages."); }
+                }}
+                className="text-xs font-semibold text-rose-500 hover:text-rose-600 border border-rose-400/30 rounded-lg px-2.5 py-1.5 hover:bg-rose-500/5 transition"
+              >
+                Clear All
+              </button>
+            </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {savedPackages.map((pkg, i) => {
@@ -1136,26 +1541,52 @@ Respond ONLY with valid JSON. Format:
                   onClick={() => setViewingSavedPkg({ pkg, index: i })}
                   className={`relative rounded-2xl border ${theme.border} bg-gradient-to-b ${theme.bg} p-4 flex flex-col justify-between gap-3 shadow-sm hover:shadow-md hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer group`}
                 >
-                  {/* Delete button */}
-                  <button
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      if (!confirm(`Delete "${pkg.name}"?`)) return;
-                      const updated = savedPackages.filter((_, idx) => idx !== i);
-                      try {
-                        await catererService.savePackages(catererId, updated);
-                        refetchSaved();
-                        toast.success(`"${pkg.name}" removed.`);
-                      } catch { toast.error("Failed to delete package."); }
-                    }}
-                    className="absolute top-2.5 right-2.5 h-6 w-6 rounded-full bg-background/90 border border-rose-400/40 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-sm z-10"
-                    title="Delete this package"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
+                  {/* Action buttons (PDF, Excel, Delete) */}
+                  <div className="absolute top-2.5 right-2.5 flex items-center gap-1 z-10">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        exportPackagesToPdf([pkg], profile?.name || "Caterer", pkg.name);
+                      }}
+                      className="h-6 w-6 rounded-full bg-background/90 border border-rose-400/40 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-all duration-150 shadow-xs"
+                      title="Download Package PDF Proposal"
+                    >
+                      <FileText className="h-3 w-3" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        exportSinglePackageToExcel(pkg, profile?.name || "Caterer");
+                      }}
+                      className="h-6 w-6 rounded-full bg-background/90 border border-emerald-400/40 text-emerald-600 hover:bg-emerald-600 hover:text-white flex items-center justify-center transition-all duration-150 shadow-xs"
+                      title="Download Package Excel (.xlsx)"
+                    >
+                      <FileSpreadsheet className="h-3 w-3" />
+                    </button>
+
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (!confirm(`Delete "${pkg.name}"?`)) return;
+                        const updated = savedPackages.filter((_, idx) => idx !== i);
+                        try {
+                          await catererService.savePackages(catererId, updated);
+                          refetchSaved();
+                          toast.success(`"${pkg.name}" removed.`);
+                        } catch { toast.error("Failed to delete package."); }
+                      }}
+                      className="h-6 w-6 rounded-full bg-background/90 border border-rose-400/40 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-xs"
+                      title="Delete this package"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
 
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between gap-1 pr-6">
+                    <div className="flex items-center justify-between gap-1 pr-20">
                       <span className={`text-[10px] font-bold uppercase tracking-wider ${theme.accent}`}>Package {i + 1}</span>
                       <span className={`text-base font-black ${theme.priceText}`}>₹{pkg.pricePerPerson}</span>
                     </div>
@@ -1189,8 +1620,36 @@ Respond ONLY with valid JSON. Format:
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-border/40 flex items-center justify-between text-[11px] font-bold text-[var(--primary)]">
-                    <span className="flex items-center gap-1"><Eye className="h-3 w-3" /> Click to view all items</span>
+                  {/* Download Buttons Row on Card */}
+                  <div className="pt-2 border-t border-border/50 flex items-center justify-between gap-1.5">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        exportPackagesToPdf([pkg], profile?.name || "Caterer", pkg.name);
+                      }}
+                      className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 text-[10px] font-bold py-1.5 px-1.5 transition shadow-2xs"
+                      title="Download Package PDF Proposal"
+                    >
+                      <FileText className="h-3 w-3 text-rose-500" />
+                      <span>Download PDF</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        exportSinglePackageToExcel(pkg, profile?.name || "Caterer");
+                      }}
+                      className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold py-1.5 px-1.5 transition shadow-2xs"
+                      title="Download Package Excel (.xlsx)"
+                    >
+                      <FileSpreadsheet className="h-3 w-3 text-emerald-600" />
+                      <span>Download Excel</span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] font-bold text-[var(--primary)] pt-0.5">
+                    <span className="flex items-center gap-1"><Eye className="h-3 w-3" /> View full menu</span>
                     <ChevronRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </div>
@@ -1307,7 +1766,27 @@ Respond ONLY with valid JSON. Format:
                 <Trash2 className="h-3.5 w-3.5" /> Delete Package
               </button>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Download PDF for single saved package */}
+                <button
+                  type="button"
+                  onClick={() => exportPackagesToPdf([viewingSavedPkg.pkg], profile?.name || "Caterer")}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 dark:text-rose-400 border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 rounded-xl px-3 py-2 transition shadow-xs"
+                  title="Download this package as printable PDF proposal"
+                >
+                  <FileText className="h-3.5 w-3.5 text-rose-500" /> Download PDF
+                </button>
+
+                {/* Download Excel for single saved package */}
+                <button
+                  type="button"
+                  onClick={() => exportSinglePackageToExcel(viewingSavedPkg.pkg, profile?.name || "Caterer")}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 rounded-xl px-3 py-2 transition shadow-xs"
+                  title="Download this package as Excel (.xlsx)"
+                >
+                  <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" /> Download Excel
+                </button>
+
                 <button
                   type="button"
                   onClick={() => {
@@ -1315,14 +1794,14 @@ Respond ONLY with valid JSON. Format:
                     navigator.clipboard.writeText(text);
                     toast.success("Package details copied to clipboard!");
                   }}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-foreground border border-border rounded-xl px-4 py-2 hover:bg-muted transition"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-foreground border border-border rounded-xl px-3.5 py-2 hover:bg-muted transition"
                 >
                   <Copy className="h-3.5 w-3.5" /> Copy Details
                 </button>
                 <button
                   type="button"
                   onClick={() => setViewingSavedPkg(null)}
-                  className="inline-flex items-center gap-1 text-xs font-bold text-white bg-[var(--primary)] rounded-xl px-5 py-2 hover:opacity-90 transition shadow-sm"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-white bg-[var(--primary)] rounded-xl px-4 py-2 hover:opacity-90 transition shadow-sm"
                 >
                   Close
                 </button>
@@ -1341,8 +1820,31 @@ Respond ONLY with valid JSON. Format:
               <CheckCircle2 className="h-5 w-5 text-[var(--success)]" />
               {generatedPackages.length} Packages Generated
             </h2>
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground">₹{pkgMinPrice} – ₹{pkgMaxPrice} / person range</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-muted-foreground mr-1">₹{pkgMinPrice} – ₹{pkgMaxPrice} / person</span>
+
+              {/* Export All as PDF */}
+              <button
+                type="button"
+                onClick={() => exportPackagesToPdf(generatedPackages, profile?.name || "Caterer")}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 text-xs font-bold px-3.5 py-2 shadow-xs transition"
+                title="Download all generated packages as a printable PDF proposal"
+              >
+                <FileText className="h-4 w-4 text-rose-500" />
+                Download PDF
+              </button>
+
+              {/* Export All as Excel */}
+              <button
+                type="button"
+                onClick={() => exportPackagesToExcel(generatedPackages, profile?.name || "Caterer")}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold px-3.5 py-2 shadow-xs transition"
+                title="Download all generated packages as an Excel (.xlsx) spreadsheet"
+              >
+                <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+                Download Excel
+              </button>
+
               {savedCount > 0 && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-green-500/10 border border-green-500/25 px-3 py-1 text-xs font-semibold text-green-600 dark:text-green-400">
                   <CheckCircle2 className="h-3.5 w-3.5" /> {savedCount} Saved
@@ -1365,7 +1867,7 @@ Respond ONLY with valid JSON. Format:
                   }
                 }}
                 disabled={isSaving}
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-sm font-semibold px-4 py-2 shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold px-3.5 py-2 shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 {isSaving ? "Saving…" : "Save All Packages"}
@@ -1393,14 +1895,35 @@ Respond ONLY with valid JSON. Format:
                     </span>
                   </div>
 
-                  {/* Copy Button */}
-                  <button
-                    onClick={() => copyPackage(pkg, idx)}
-                    title="Copy Package Details"
-                    className="absolute top-3 right-3 p-1.5 rounded-xl border border-border/50 bg-background/80 hover:bg-background transition text-muted-foreground hover:text-foreground shadow-sm"
-                  >
-                    {isCopied ? <CheckCircle2 className="h-4 w-4 text-[var(--success)]" /> : <Copy className="h-4 w-4" />}
-                  </button>
+                  {/* Action Buttons: PDF, Excel, Copy */}
+                  <div className="absolute top-3 right-3 flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => exportPackagesToPdf([pkg], profile?.name || "Caterer")}
+                      title="Download Package PDF Proposal"
+                      className="p-1.5 rounded-xl border border-border/50 bg-background/80 hover:bg-rose-500/10 text-muted-foreground hover:text-rose-600 transition shadow-xs"
+                    >
+                      <FileText className="h-3.5 w-3.5 text-rose-500" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => exportSinglePackageToExcel(pkg, profile?.name || "Caterer")}
+                      title="Download Package Excel (.xlsx)"
+                      className="p-1.5 rounded-xl border border-border/50 bg-background/80 hover:bg-emerald-500/10 text-muted-foreground hover:text-emerald-600 transition shadow-xs"
+                    >
+                      <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => copyPackage(pkg, idx)}
+                      title="Copy Package Details"
+                      className="p-1.5 rounded-xl border border-border/50 bg-background/80 hover:bg-background transition text-muted-foreground hover:text-foreground shadow-xs"
+                    >
+                      {isCopied ? <CheckCircle2 className="h-3.5 w-3.5 text-[var(--success)]" /> : <Copy className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
 
                   {/* Header info */}
                   <div className="pt-2">

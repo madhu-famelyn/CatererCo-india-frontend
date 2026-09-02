@@ -15,11 +15,6 @@ export default function ProfileCompletion() {
             {emirates.map(e => <option key={e}>{e}</option>)}
           </select>
         </Field>
-        <Field label="Language preference">
-          <select className="h-11 w-full rounded-lg border border-input bg-surface px-3 text-sm">
-            <option>English</option><option>हिंदी (Hindi)</option><option>ಕನ್ನಡ (Kannada)</option><option>తెలుగు (Telugu)</option>
-          </select>
-        </Field>
         <Field label="Typical event size">
           <select className="h-11 w-full rounded-lg border border-input bg-surface px-3 text-sm">
             <option>Under 50 guests</option><option>50–150 guests</option><option>150–400 guests</option><option>400+ guests</option>

@@ -98,7 +98,7 @@ export default function App() {
         <Route path="quotations" element={<CatererQuotations />} />
         <Route path="menu" element={<CatererMenu />} />
         <Route path="packages" element={<GeneratePackage />} />
-        <Route path="dishes" element={<CatererDishes />} />
+        <Route path="dishes" element={<Navigate to="/caterer/menu" replace />} />
         <Route path="addons" element={<CatererAddons />} />
         <Route path="gallery" element={<CatererGallery />} />
         <Route path="profile" element={<CatererProfile />} />

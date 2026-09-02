@@ -106,8 +106,7 @@ export default function CatererMenu() {
   const [description, setDescription] = useState("");
   const [cuisine, setCuisine] = useState("Indian");
   const [customCuisine, setCustomCuisine] = useState("");
-  const [isVeg, setIsVeg] = useState(false);
-  const [isHalal, setIsHalal] = useState(true);
+  const [isVeg, setIsVeg] = useState(true);
   const [isSpicy, setIsSpicy] = useState(false);
 
   // shared import state (used by both CSV and PDF)
@@ -217,7 +216,6 @@ export default function CatererMenu() {
       cuisine: hasPreset ? d.cuisine : (d.cuisine ? "Other" : "Indian"),
       customCuisine: hasPreset ? "" : (d.cuisine || ""),
       is_vegetarian: d.veg || false,
-      is_halal: d.is_halal ?? true,
       is_spicy: d.is_spicy ?? false,
     });
   };
@@ -234,7 +232,6 @@ export default function CatererMenu() {
         description: editForm.description,
         cuisine: finalCuisine || "Indian",
         is_vegetarian: editForm.is_vegetarian,
-        is_halal: editForm.is_halal,
         is_spicy: editForm.is_spicy,
       },
     });
@@ -253,14 +250,13 @@ export default function CatererMenu() {
         description,
         cuisine: finalCuisine || "Indian",
         is_vegetarian: isVeg,
-        is_halal: isHalal,
         is_spicy: isSpicy,
         is_popular: false
       },
       {
         onSuccess: () => {
           toast.success("Dish added to menu!");
-          setName(""); setPrice(""); setDescription(""); setCuisine("Indian"); setCustomCuisine(""); setIsVeg(false); setIsHalal(true); setIsSpicy(false);
+          setName(""); setPrice(""); setDescription(""); setCuisine("Indian"); setCustomCuisine(""); setIsVeg(true); setIsSpicy(false);
           setMode(null);
         },
       }
@@ -368,8 +364,8 @@ export default function CatererMenu() {
   return (
     <>
       <PageHeader
-        title="Menu management"
-        description="Upload your existing menu or build it here."
+        title="Master Menu"
+        description="Manage your complete master catalog of dishes, pricing, and dietary options."
         action={
           <Button onClick={() => setMode(mode === "manual" ? null : "manual")}>
             <Plus className="h-4 w-4" /> {mode === "manual" ? "Close" : "Add dish"}
@@ -395,7 +391,7 @@ export default function CatererMenu() {
               <div className="mt-3 rounded-lg border border-border bg-muted/50 p-2.5">
                 <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Required columns (Excel/CSV)</div>
                 <div className="flex flex-wrap gap-1">
-                  {["Category Name", "Item Name", "Cuisine Type", "Veg / Non-Veg", "Price (₹)", "Halal (Yes/No)", "Spicy (Yes/No)"].map((col) => (
+                  {["Category Name", "Item Name", "Cuisine Type", "Veg / Non-Veg", "Price (₹)", "Spicy (Yes/No)"].map((col) => (
                     <span key={col} className="inline-flex items-center rounded-full bg-[var(--primary)]/10 px-2 py-0.5 text-[10px] font-semibold text-[var(--primary)] border border-[var(--primary)]/20">
                       {col}
                     </span>
@@ -412,8 +408,8 @@ export default function CatererMenu() {
             </div>
           </div>
           <label className={`mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed px-3 py-3 text-sm font-medium transition ${isParsingAny
-              ? "border-[var(--primary)] bg-[color-mix(in_oklab,var(--primary)_8%,transparent)] cursor-wait"
-              : "border-border hover:border-[var(--primary)] hover:bg-[color-mix(in_oklab,var(--primary)_4%,transparent)]"
+            ? "border-[var(--primary)] bg-[color-mix(in_oklab,var(--primary)_8%,transparent)] cursor-wait"
+            : "border-border hover:border-[var(--primary)] hover:bg-[color-mix(in_oklab,var(--primary)_4%,transparent)]"
             }`}>
             {isParsingAny
               ? <><Loader2 className="h-4 w-4 animate-spin text-[var(--primary)]" /> <span className="text-[var(--primary)]">Parsing file…</span></>
@@ -441,7 +437,7 @@ export default function CatererMenu() {
               <div className="mt-3 rounded-lg border border-border bg-muted/50 p-2.5">
                 <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">You will fill in</div>
                 <div className="flex flex-wrap gap-1">
-                  {["Category Name", "Item Name", "Cuisine Type", "Veg / Non-Veg", "Price (₹)", "Description", "Halal (Yes/No)", "Spicy (Yes/No)"].map((col) => (
+                  {["Category Name", "Item Name", "Cuisine Type", "Veg / Non-Veg", "Price (₹)", "Description", "Spicy (Yes/No)"].map((col) => (
                     <span key={col} className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground border border-border">
                       {col}
                     </span>
@@ -484,7 +480,6 @@ export default function CatererMenu() {
                   <span className="w-24 shrink-0">Category</span>
                   <span className="w-20 shrink-0">Cuisine</span>
                   <span className="w-16 shrink-0">Diet</span>
-                  <span className="w-14 shrink-0">Halal</span>
                   <span className="w-14 shrink-0">Spicy</span>
                   <span className="w-16 shrink-0 text-right">Price</span>
                 </div>
@@ -497,9 +492,6 @@ export default function CatererMenu() {
                     </span>
                     <span className={`w-16 shrink-0 text-xs font-semibold rounded px-1.5 py-0.5 ${r.is_vegetarian ? "bg-emerald-500/10 text-emerald-600" : "bg-rose-500/10 text-rose-600"}`}>
                       {r.is_vegetarian ? "Veg" : "Non-Veg"}
-                    </span>
-                    <span className={`w-14 shrink-0 text-xs font-semibold rounded px-1.5 py-0.5 ${r.is_halal ? "bg-teal-500/10 text-teal-600" : "bg-muted text-muted-foreground"}`}>
-                      {r.is_halal ? "Halal" : "No"}
                     </span>
                     <span className={`w-14 shrink-0 text-xs font-semibold rounded px-1.5 py-0.5 ${r.is_spicy ? "bg-orange-500/10 text-orange-600" : "bg-muted text-muted-foreground"}`}>
                       {r.is_spicy ? "Spicy" : "Mild"}
@@ -584,19 +576,6 @@ export default function CatererMenu() {
                   <button type="button" onClick={() => setIsVeg(false)}
                     className={`flex flex-1 items-center justify-center gap-1.5 transition border-l border-border ${!isVeg ? "bg-rose-500 text-white" : "bg-background text-muted-foreground hover:bg-muted"}`}>
                     <span className="h-2.5 w-2.5 rounded-full border-2 border-current inline-block" /> Non-Veg
-                  </button>
-                </div>
-              </Field>
-
-              <Field label="Halal Certified">
-                <div className="flex h-11 rounded-lg overflow-hidden border border-border text-xs font-semibold">
-                  <button type="button" onClick={() => setIsHalal(true)}
-                    className={`flex flex-1 items-center justify-center gap-1.5 transition ${isHalal ? "bg-teal-500 text-white" : "bg-background text-muted-foreground hover:bg-muted"}`}>
-                    <ShieldCheck className="h-3.5 w-3.5" /> Yes
-                  </button>
-                  <button type="button" onClick={() => setIsHalal(false)}
-                    className={`flex flex-1 items-center justify-center gap-1.5 transition border-l border-border ${!isHalal ? "bg-rose-500/80 text-white" : "bg-background text-muted-foreground hover:bg-muted"}`}>
-                    Not Halal
                   </button>
                 </div>
               </Field>
@@ -712,11 +691,6 @@ export default function CatererMenu() {
                         <div className="flex items-center gap-2 shrink-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <DietaryBadge isVeg={d.veg} size="sm" />
-                            {d.is_halal && (
-                              <span className="inline-flex items-center gap-0.5 rounded-full bg-teal-500/10 px-2 py-0.5 text-[10px] font-semibold text-teal-600 border border-teal-500/20">
-                                <ShieldCheck className="h-3 w-3" /> Halal
-                              </span>
-                            )}
                             {d.is_spicy && (
                               <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold text-orange-600 border border-orange-500/20">
                                 <Flame className="h-3 w-3" /> Spicy
@@ -813,18 +787,6 @@ export default function CatererMenu() {
                               <button type="button" onClick={() => setEditForm((f) => ({ ...f, is_vegetarian: false }))}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 transition border-l border-border ${!editForm.is_vegetarian ? "bg-rose-500 text-white" : "bg-background text-muted-foreground hover:bg-muted"}`}>
                                 <span className="h-2.5 w-2.5 rounded-full border-2 border-current inline-block" /> Non-Veg
-                              </button>
-                            </div>
-
-                            {/* Halal toggle */}
-                            <div className="flex rounded-lg overflow-hidden border border-border text-xs font-semibold">
-                              <button type="button" onClick={() => setEditForm((f) => ({ ...f, is_halal: true }))}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 transition ${editForm.is_halal ? "bg-teal-500 text-white" : "bg-background text-muted-foreground hover:bg-muted"}`}>
-                                <ShieldCheck className="h-3.5 w-3.5" /> Halal
-                              </button>
-                              <button type="button" onClick={() => setEditForm((f) => ({ ...f, is_halal: false }))}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 transition border-l border-border ${!editForm.is_halal ? "bg-rose-500/80 text-white" : "bg-background text-muted-foreground hover:bg-muted"}`}>
-                                Not Halal
                               </button>
                             </div>
 

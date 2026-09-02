@@ -13,6 +13,30 @@ import { catererService } from "@/services/catererService";
 import { emirates } from "@/data/mock";
 import FoodCategoriesSelector, { FOOD_CATEGORIES_PRESETS } from "@/components/common/FoodCategoriesSelector";
 
+// ── Helper to derive a 3-letter uppercase alphabet code for each caterer ──────
+export function getCatererCode(caterer) {
+  if (!caterer) return "CAT";
+  if (caterer.code && typeof caterer.code === "string" && caterer.code.trim()) {
+    return caterer.code.trim().toUpperCase().slice(0, 3);
+  }
+  if (caterer.short_code && typeof caterer.short_code === "string" && caterer.short_code.trim()) {
+    return caterer.short_code.trim().toUpperCase().slice(0, 3);
+  }
+  const name = caterer.caterer_name || caterer.name || caterer.company || caterer.business_name || "";
+  const cleanName = name.replace(/[^a-zA-Z\s]/g, "").trim();
+  const words = cleanName.split(/\s+/).filter(Boolean);
+  if (words.length >= 3) {
+    return (words[0][0] + words[1][0] + words[2][0]).toUpperCase();
+  } else if (words.length === 2) {
+    return (words[0].slice(0, 2) + words[1][0]).toUpperCase();
+  } else if (words.length === 1 && words[0].length >= 3) {
+    return words[0].slice(0, 3).toUpperCase();
+  } else if (words.length === 1) {
+    return words[0].toUpperCase().padEnd(3, "X");
+  }
+  return "CAT";
+}
+
 function DishRow({ dish, selected, onToggle, onReplace }) {
   return (
     <div className={`flex items-center justify-between rounded-xl border p-3 transition ${selected ? "border-[var(--primary)] bg-[color-mix(in_oklab,var(--primary)_6%,transparent)]" : "border-border"}`}>
@@ -33,11 +57,6 @@ function DishRow({ dish, selected, onToggle, onReplace }) {
             )}
             {dish.popular && <Badge variant="gold"><Star className="h-3 w-3" /> Popular</Badge>}
             <DietaryBadge isVeg={dish.veg} size="sm" />
-            {(dish.is_halal ?? dish.halal) && (
-              <span className="inline-flex items-center gap-0.5 rounded-full bg-teal-500/10 px-2 py-0.5 text-[10px] font-semibold text-teal-600 border border-teal-500/20">
-                <ShieldCheck className="h-3 w-3" /> Halal
-              </span>
-            )}
             {(dish.is_spicy ?? dish.spicy) && (
               <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold text-orange-600 border border-orange-500/20">
                 <Flame className="h-3 w-3" /> Spicy
@@ -723,12 +742,49 @@ export default function MenuBuilder() {
 
   const catererTabs = [
     { id: "all", name: `All Options (${displayedCatererMenus.length})` },
-    ...displayedCatererMenus.map((c, i) => ({
-      id: c.caterer_id,
-      name: `Menu ${i + 1}`,
-      shortName: `Menu ${i + 1}`,
-    })),
+    ...displayedCatererMenus.map((c, i) => {
+      const code = getCatererCode(c);
+      return {
+        id: c.caterer_id,
+        name: `Menu ${i + 1} (${code})`,
+        shortName: `Menu ${i + 1} (${code})`,
+        code,
+        catererName: c.caterer_name || c.name,
+      };
+    }),
   ];
+
+  // Dynamically compute the currently selected Menu for the Quotation button
+  const selectedMenuInfo = useMemo(() => {
+    if (activeCatererFilter === "all" || displayedCatererMenus.length === 0) {
+      return {
+        isSelected: false,
+        menuNum: null,
+        code: "",
+        text: "Select a Menu",
+        fullText: "Select a Menu to Get Quotation",
+      };
+    }
+    const idx = displayedCatererMenus.findIndex((m) => m.caterer_id === activeCatererFilter);
+    if (idx === -1) {
+      return {
+        isSelected: false,
+        menuNum: null,
+        code: "",
+        text: "Select a Menu",
+        fullText: "Select a Menu to Get Quotation",
+      };
+    }
+    const caterer = displayedCatererMenus[idx];
+    const code = getCatererCode(caterer);
+    return {
+      isSelected: true,
+      menuNum: idx + 1,
+      code,
+      text: `Menu ${idx + 1} (${code})`,
+      fullText: `Approve Menu ${idx + 1} (${code}) & Get Quotation`,
+    };
+  }, [activeCatererFilter, displayedCatererMenus]);
 
   if (isLoading) {
     return (
@@ -742,7 +798,8 @@ export default function MenuBuilder() {
   // Reusable tables for a single caterer menu — separate table per category
   const renderMenuTable = (catererMenu, menuIdx, showReplace = false) => {
     const catererId = catererMenu.caterer_id;
-    const menuLabel = `Menu ${menuIdx + 1}`;
+    const catererCode = getCatererCode(catererMenu);
+    const menuLabel = `Menu ${menuIdx + 1} (${catererCode})`;
     const items = catererMenu.items || {};
     const allItems = Object.values(items).flat();
     const catererSel = allSelections[catererId] || {};
@@ -758,8 +815,11 @@ export default function MenuBuilder() {
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2 flex-wrap">
             <ChefHat className="h-5 w-5 text-[var(--primary)]" />
-            <h3 className="font-display text-lg font-bold">{menuLabel}</h3>
-            <span className="text-xs text-muted-foreground">({allItems.length} dishes in DB)</span>
+            <h3 className="font-display text-lg font-bold">Menu {menuIdx + 1}</h3>
+            <span className="inline-flex items-center rounded-md bg-[var(--primary)]/10 px-2 py-0.5 text-xs font-mono font-bold text-[var(--primary)] border border-[var(--primary)]/25 shadow-2xs">
+              Code: {catererCode}
+            </span>
+            <span className="text-xs text-muted-foreground">({catererMenu.caterer_name || "Caterer"} · {allItems.length} dishes in DB)</span>
             {catererCuisines.length > 0 && (
               <div className="flex items-center gap-1 ml-1 flex-wrap">
                 {catererCuisines.map((c) => (
@@ -963,11 +1023,6 @@ export default function MenuBuilder() {
                           <td className="px-3 py-2.5">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <DietaryBadge isVeg={dish.veg} />
-                              {(dish.is_halal ?? dish.halal) && (
-                                <span className="inline-flex items-center gap-0.5 rounded-full bg-teal-500/10 px-2 py-0.5 text-[10px] font-semibold text-teal-600 border border-teal-500/20">
-                                  <ShieldCheck className="h-3 w-3" /> Halal
-                                </span>
-                              )}
                               {(dish.is_spicy ?? dish.spicy) && (
                                 <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold text-orange-600 border border-orange-500/20">
                                   <Flame className="h-3 w-3" /> Spicy
@@ -1052,46 +1107,52 @@ export default function MenuBuilder() {
   return (
     <div className="min-h-screen bg-background">
       {/* Top nav */}
-      <div className="border-b border-border bg-surface">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+      <div className="border-b border-border bg-surface shadow-xs">
+        <div className="mx-auto flex max-w-7xl flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center gap-3">
             <Link to="/events/new">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4" /> Back
+              <Button variant="ghost" size="sm" className="h-9 px-2.5 sm:px-3 text-xs sm:text-sm font-semibold">
+                <ArrowLeft className="h-4 w-4 mr-1" /> Back
               </Button>
             </Link>
             <div>
-              <div className="font-display text-lg font-semibold">Menu Builder</div>
-              <div className="text-xs text-muted-foreground">
+              <div className="font-display text-base sm:text-lg font-bold leading-tight">Menu Builder</div>
+              <div className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
                 Browse menus from {displayedCatererMenus.length} matched caterers · {guests} guests
               </div>
             </div>
           </div>
-          <Link
-            to="/quotations/QT-2201"
-            onClick={() => {
-              let selObj = allSelections[activeCatererFilter];
-              if (!selObj || Object.keys(selObj).length === 0) {
-                selObj = Object.values(allSelections).find((s) => s && Object.keys(s).length > 0) || {};
-              }
-              let dishIds = Object.values(selObj).flat();
-              if (dishIds.length === 0) {
-                dishIds = Object.values(allSelections).flatMap((s) => Object.values(s || {}).flat());
-              }
-              let dishes = dishIds.map((id) => allDishMap[id]).filter(Boolean);
-              set({
-                activeQuotationDishes: dishes,
-                selectedMenu: allSelections,
-              });
-              try {
-                localStorage.setItem("activeQuotationDishes", JSON.stringify(dishes));
-              } catch {}
-            }}
-          >
-            <Button variant="gold">
-              Approve &amp; get quotation <ArrowRight className="h-4 w-4" />
+          {selectedMenuInfo.isSelected ? (
+            <Link
+              to="/quotations/QT-2201"
+              className="w-full sm:w-auto"
+              onClick={() => {
+                let selObj = allSelections[activeCatererFilter] || {};
+                let dishIds = Object.values(selObj).flat();
+                let dishes = dishIds.map((id) => allDishMap[id]).filter(Boolean);
+                set({
+                  activeQuotationDishes: dishes,
+                  selectedMenu: allSelections,
+                });
+                try {
+                  localStorage.setItem("activeQuotationDishes", JSON.stringify(dishes));
+                } catch {}
+              }}
+            >
+              <Button variant="gold" className="w-full sm:w-auto font-bold text-xs sm:text-sm h-10 px-4 shadow-md hover:shadow-lg transition-all duration-200 justify-center">
+                {selectedMenuInfo.fullText} <ArrowRight className="h-4 w-4 ml-1.5 shrink-0" />
+              </Button>
+            </Link>
+          ) : (
+            <Button
+              variant="outline"
+              disabled
+              className="w-full sm:w-auto font-bold text-xs sm:text-sm h-10 px-4 opacity-50 cursor-not-allowed justify-center border-dashed border-border"
+              title="Please select a specific Menu (e.g. Menu 1, Menu 2) to get quotation"
+            >
+              Select a Menu to Get Quotation
             </Button>
-          </Link>
+          )}
         </div>
       </div>
 
@@ -1202,7 +1263,7 @@ export default function MenuBuilder() {
                   <Users className="h-3 w-3 text-[var(--primary)]" /> Guest Count &amp; Location
                 </span>
                 <div className="mt-1.5 font-medium text-foreground">
-                  {guests} Guests · {draft.emirate || "Dubai"}
+                  {guests} Guests · {draft.city || draft.emirate || "Bangalore"}
                 </div>
               </div>
 
@@ -1298,7 +1359,12 @@ export default function MenuBuilder() {
               <div className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
                 {activeCatererFilter === "all"
                   ? "All Menus Total"
-                  : `Menu ${displayedCatererMenus.findIndex((m) => m.caterer_id === activeCatererFilter) + 1} Selection`}
+                  : (() => {
+                      const idx = displayedCatererMenus.findIndex((m) => m.caterer_id === activeCatererFilter);
+                      const cat = displayedCatererMenus[idx];
+                      const code = cat ? getCatererCode(cat) : "";
+                      return `Menu ${idx + 1} (${code}) Selection`;
+                    })()}
               </div>
               {activeStats.selectedCount > 0 && (
                 <span className="text-xs font-semibold text-[var(--primary)]">{activeStats.selectedCount} items</span>
@@ -1332,6 +1398,48 @@ export default function MenuBuilder() {
             </div>
           </Card>
 
+          {/* Dynamic Action Button in Middle of Sidebar */}
+          {selectedMenuInfo.isSelected ? (
+            <Link
+              to="/quotations/QT-2201"
+              className="block"
+              onClick={() => {
+                let selObj = allSelections[activeCatererFilter] || {};
+                let dishIds = Object.values(selObj).flat();
+                let dishes = dishIds.map((id) => allDishMap[id]).filter(Boolean);
+                set({
+                  activeQuotationDishes: dishes,
+                  selectedMenu: allSelections,
+                });
+                try {
+                  localStorage.setItem("activeQuotationDishes", JSON.stringify(dishes));
+                } catch {}
+              }}
+            >
+              <Button
+                variant="gold"
+                className="w-full py-3.5 px-4 font-bold text-xs sm:text-sm shadow-md hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 flex items-center justify-between group rounded-xl"
+              >
+                <div className="flex items-center gap-2 truncate text-left">
+                  <Check className="h-4 w-4 shrink-0 text-white" />
+                  <span className="truncate">
+                    Selected {selectedMenuInfo.text} · Get Quotation
+                  </span>
+                </div>
+                <ArrowRight className="h-4 w-4 shrink-0 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
+          ) : (
+            <Button
+              variant="outline"
+              disabled
+              className="w-full py-3.5 px-4 font-bold text-xs sm:text-sm opacity-50 cursor-not-allowed flex items-center justify-center rounded-xl border-dashed border-border text-muted-foreground"
+              title="Please select a specific Menu tab (e.g. Menu 1, Menu 2) above to get quotation"
+            >
+              Select a Menu Option to Get Quotation
+            </Button>
+          )}
+
           {/* Quick compare: all menu totals at a glance */}
           {displayedCatererMenus.length > 1 && (
             <Card className="p-5">
@@ -1354,7 +1462,7 @@ export default function MenuBuilder() {
                       <div className="flex items-center gap-2 truncate pr-2">
                         <ChefHat className="h-3 w-3 text-muted-foreground shrink-0" />
                         <span className="font-semibold truncate">
-                          Menu {i + 1}
+                          Menu {i + 1} ({getCatererCode(m)})
                         </span>
                         {stats.selectedCount > 0 && (
                           <span className="rounded-full bg-[var(--primary)]/10 text-[var(--primary)] px-1.5 py-0.5 text-[10px] font-bold shrink-0">
@@ -1402,6 +1510,7 @@ export default function MenuBuilder() {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 overflow-y-auto flex-1 pr-1 pb-4">
               {displayedCatererMenus.map((catererMenu, idx) => {
                 const catererId = catererMenu.caterer_id;
+                const catererCode = getCatererCode(catererMenu);
                 const stats = getMenuStats(catererId);
                 const catererSel = allSelections[catererId] || {};
                 const selIds = Object.values(catererSel).flat();
@@ -1419,11 +1528,17 @@ export default function MenuBuilder() {
                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <Badge variant={isActive ? "gold" : "secondary"}>Menu {idx + 1}</Badge>
+                      <div className="flex items-center gap-1.5">
+                        <Badge variant={isActive ? "gold" : "secondary"}>Menu {idx + 1}</Badge>
+                        <span className="font-mono text-xs font-bold text-[var(--primary)] bg-[var(--primary)]/10 px-1.5 py-0.5 rounded border border-[var(--primary)]/20">
+                          {catererCode}
+                        </span>
+                      </div>
                       <span className="text-xs font-semibold text-muted-foreground">{allItems.length} dishes</span>
                     </div>
 
-                    <h4 className="font-display text-base font-bold text-foreground">Menu Option {idx + 1}</h4>
+                    <h4 className="font-display text-base font-bold text-foreground">Menu Option {idx + 1} ({catererCode})</h4>
+                    <div className="text-xs text-muted-foreground font-medium">{catererMenu.caterer_name || "Caterer Partner"}</div>
 
                     <div className="mt-2 space-y-1">
                       <div className="font-display text-xl font-bold text-[var(--primary)]">
@@ -1604,11 +1719,6 @@ export default function MenuBuilder() {
                             </span>
                           )}
                           <DietaryBadge isVeg={d.veg} size="sm" />
-                          {(d.is_halal ?? d.halal) && (
-                            <span className="inline-flex items-center gap-0.5 rounded-full bg-teal-500/10 px-2 py-0.5 text-[10px] font-semibold text-teal-600 border border-teal-500/20">
-                              <ShieldCheck className="h-3 w-3" /> Halal
-                            </span>
-                          )}
                           {(d.is_spicy ?? d.spicy) && (
                             <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold text-orange-600 border border-orange-500/20">
                               <Flame className="h-3 w-3" /> Spicy
@@ -1705,7 +1815,7 @@ export default function MenuBuilder() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-foreground">Emirate</label>
+                  <label className="mb-1 block text-xs font-semibold text-foreground">City</label>
                   <select
                     value={editForm.emirate}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, emirate: e.target.value }))}
