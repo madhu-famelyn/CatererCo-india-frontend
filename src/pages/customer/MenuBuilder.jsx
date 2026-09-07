@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Sparkles, RefreshCcw, Check, ArrowLeft, ArrowRight, Star, X, Loader2, ChefHat, UtensilsCrossed, Edit3, SlidersHorizontal, Users, MapPin, Coins, Package, Zap, Trophy, PackageCheck, ShieldCheck, Flame, Info } from "lucide-react";
+import { Sparkles, RefreshCcw, Check, ArrowLeft, ArrowRight, Star, X, Loader2, ChefHat, UtensilsCrossed, Edit3, SlidersHorizontal, Users, MapPin, Coins, Package, Zap, Trophy, PackageCheck, ShieldCheck, Flame, Info, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge, DietaryBadge } from "@/components/ui/Badge";
@@ -10,6 +10,7 @@ import { AED } from "@/lib/format";
 import { toast } from "sonner";
 import { menuService } from "@/services/menuService";
 import { catererService } from "@/services/catererService";
+import { quotationService } from "@/services/quotationService";
 import { emirates } from "@/data/mock";
 import FoodCategoriesSelector, { FOOD_CATEGORIES_PRESETS } from "@/components/common/FoodCategoriesSelector";
 
@@ -76,6 +77,7 @@ function DishRow({ dish, selected, onToggle, onReplace }) {
 }
 
 export default function MenuBuilder() {
+  const navigate = useNavigate();
   const { draft, set } = useEventDraft();
   // Per-menu selection: { catererId: { category: [dishIds] } }
   const [allSelections, setAllSelections] = useState(draft.selectedMenu || {});
@@ -86,6 +88,15 @@ export default function MenuBuilder() {
   const [replaceCuisineFilter, setReplaceCuisineFilter] = useState("all");
   const [showComparison, setShowComparison] = useState(false);
   const [isEditingPreferences, setIsEditingPreferences] = useState(false);
+  const [isSubmittingQuotation, setIsSubmittingQuotation] = useState(false);
+
+  // ── Master Menu Popup State ────────────────────────────────────────────────
+  const [isMasterMenuOpen, setIsMasterMenuOpen] = useState(false);
+  const [masterMenuCatererId, setMasterMenuCatererId] = useState(null);
+  const [masterMenuSearch, setMasterMenuSearch] = useState("");
+  const [masterMenuCatFilter, setMasterMenuCatFilter] = useState("all");
+  const [masterMenuDietFilter, setMasterMenuDietFilter] = useState("all");
+
   const [editForm, setEditForm] = useState({
     guestCount: draft.guestCount || 100,
     budget: draft.budget || 15000,
@@ -207,11 +218,11 @@ export default function MenuBuilder() {
     }
     if (target === "sandwiches" || target.includes("sandwich") || target.includes("burger")) {
       return catLower.includes("sandwich") || catLower.includes("burger") || catLower.includes("wrap") || catLower.includes("slider") ||
-             dishNameLower.includes("sandwich") || dishNameLower.includes("burger") || dishNameLower.includes("wrap") || dishNameLower.includes("slider");
+        dishNameLower.includes("sandwich") || dishNameLower.includes("burger") || dishNameLower.includes("wrap") || dishNameLower.includes("slider");
     }
     if (target === "pasta") {
       return catLower.includes("pasta") || catLower.includes("spaghetti") || catLower.includes("penne") || catLower.includes("lasagna") || catLower.includes("ravioli") ||
-             dishNameLower.includes("pasta") || dishNameLower.includes("spaghetti") || dishNameLower.includes("penne") || dishNameLower.includes("lasagna");
+        dishNameLower.includes("pasta") || dishNameLower.includes("spaghetti") || dishNameLower.includes("penne") || dishNameLower.includes("lasagna");
     }
     if (target === "pizza") {
       return catLower.includes("pizza") || catLower.includes("flatbread") || dishNameLower.includes("pizza") || dishNameLower.includes("flatbread");
@@ -221,39 +232,39 @@ export default function MenuBuilder() {
     }
     if (target === "cold_starters" || target.includes("cold starter")) {
       return catLower.includes("cold starter") || catLower.includes("cold appetizer") || catLower.includes("hummus") || catLower.includes("moutabal") || catLower.includes("mezze") || catLower.includes("dip") || catLower.includes("carpaccio") || catLower.includes("canape") ||
-             dishNameLower.includes("hummus") || dishNameLower.includes("moutabal") || dishNameLower.includes("mezze") || dishNameLower.includes("carpaccio");
+        dishNameLower.includes("hummus") || dishNameLower.includes("moutabal") || dishNameLower.includes("mezze") || dishNameLower.includes("carpaccio");
     }
     if (target === "hot_starters" || target.includes("hot starter") || target === "starters") {
       return catLower.includes("hot starter") || catLower.includes("hot appetizer") || catLower.includes("starter") || catLower.includes("appetizer") || catLower.includes("wing") || catLower.includes("samosa") || catLower.includes("spring roll") || catLower.includes("kibbeh") || catLower.includes("croquette") || catLower.includes("falafel") ||
-             dishNameLower.includes("wing") || dishNameLower.includes("samosa") || dishNameLower.includes("spring roll") || dishNameLower.includes("kibbeh") || dishNameLower.includes("falafel");
+        dishNameLower.includes("wing") || dishNameLower.includes("samosa") || dishNameLower.includes("spring roll") || dishNameLower.includes("kibbeh") || dishNameLower.includes("falafel");
     }
     if (target === "oven" || target.includes("oven") || target.includes("bakery")) {
       return catLower.includes("oven") || catLower.includes("bakery") || catLower.includes("bread") || catLower.includes("naan") || catLower.includes("roti") || catLower.includes("manakish") || catLower.includes("pie") || catLower.includes("quiche") ||
-             dishNameLower.includes("bread") || dishNameLower.includes("naan") || dishNameLower.includes("roti") || dishNameLower.includes("manakish");
+        dishNameLower.includes("bread") || dishNameLower.includes("naan") || dishNameLower.includes("roti") || dishNameLower.includes("manakish");
     }
     if (target === "grill" || target.includes("grill") || target.includes("bbq")) {
       return catLower.includes("grill") || catLower.includes("bbq") || catLower.includes("kebab") || catLower.includes("tandoor") || catLower.includes("tikka") ||
-             dishNameLower.includes("grill") || dishNameLower.includes("bbq") || dishNameLower.includes("kebab") || dishNameLower.includes("tikka") || dishNameLower.includes("skewer") || dishNameLower.includes("chops");
+        dishNameLower.includes("grill") || dishNameLower.includes("bbq") || dishNameLower.includes("kebab") || dishNameLower.includes("tikka") || dishNameLower.includes("skewer") || dishNameLower.includes("chops");
     }
     if (target === "middle_eastern" || target.includes("iraqi") || target.includes("middle eastern")) {
       return catLower.includes("iraqi") || catLower.includes("middle eastern") || catLower.includes("arabic") || catLower.includes("mandi") || catLower.includes("ouzi") || catLower.includes("kabsa") || catLower.includes("shawarma") || catLower.includes("machboos") ||
-             dishNameLower.includes("mandi") || dishNameLower.includes("ouzi") || dishNameLower.includes("kabsa") || dishNameLower.includes("shawarma") || dishNameLower.includes("machboos") || dishNameLower.includes("iraqi");
+        dishNameLower.includes("mandi") || dishNameLower.includes("ouzi") || dishNameLower.includes("kabsa") || dishNameLower.includes("shawarma") || dishNameLower.includes("machboos") || dishNameLower.includes("iraqi");
     }
     if (target === "sides" || target.includes("side")) {
       return catLower.includes("side") || catLower.includes("fries") || catLower.includes("wedge") || catLower.includes("mashed") ||
-             dishNameLower.includes("fries") || dishNameLower.includes("wedges") || dishNameLower.includes("mashed potato");
+        dishNameLower.includes("fries") || dishNameLower.includes("wedges") || dishNameLower.includes("mashed potato");
     }
     if (target === "desserts" || target.includes("dessert")) {
       return catLower.includes("dessert") || catLower.includes("sweet") || catLower.includes("cake") || catLower.includes("pastry") || catLower.includes("pie") || catLower.includes("ice cream") || catLower.includes("fondant") || catLower.includes("creme") || catLower.includes("kunafa") || catLower.includes("baklava") || catLower.includes("umm ali") ||
-             dishNameLower.includes("dessert") || dishNameLower.includes("cake") || dishNameLower.includes("kunafa") || dishNameLower.includes("baklava") || dishNameLower.includes("umm ali") || dishNameLower.includes("sweet");
+        dishNameLower.includes("dessert") || dishNameLower.includes("cake") || dishNameLower.includes("kunafa") || dishNameLower.includes("baklava") || dishNameLower.includes("umm ali") || dishNameLower.includes("sweet");
     }
     if (target === "soups" || target.includes("soup")) {
       return catLower.includes("soup") || catLower.includes("shorba") || catLower.includes("chowder") || catLower.includes("broth") ||
-             dishNameLower.includes("soup") || dishNameLower.includes("shorba") || dishNameLower.includes("chowder");
+        dishNameLower.includes("soup") || dishNameLower.includes("shorba") || dishNameLower.includes("chowder");
     }
     if (target === "beverages" || target.includes("beverage") || target.includes("drink")) {
       return catLower.includes("beverage") || catLower.includes("drink") || catLower.includes("juice") || catLower.includes("tea") || catLower.includes("coffee") || catLower.includes("cocktail") || catLower.includes("mocktail") || catLower.includes("chai") || catLower.includes("mojito") ||
-             dishNameLower.includes("juice") || dishNameLower.includes("drink") || dishNameLower.includes("cocktail") || dishNameLower.includes("mocktail") || dishNameLower.includes("mojito") || dishNameLower.includes("tea") || dishNameLower.includes("coffee");
+        dishNameLower.includes("juice") || dishNameLower.includes("drink") || dishNameLower.includes("cocktail") || dishNameLower.includes("mocktail") || dishNameLower.includes("mojito") || dishNameLower.includes("tea") || dishNameLower.includes("coffee");
     }
     if (target === "live_stations" || target.includes("live")) {
       return catLower.includes("live") || catLower.includes("station") || dishNameLower.includes("live") || dishNameLower.includes("station");
@@ -740,6 +751,91 @@ export default function MenuBuilder() {
     return Array.from(set);
   }, [replacementDishes]);
 
+  // ── Master Menu Computations & Handlers ────────────────────────────────────
+  const currentMasterCatererMenu = useMemo(() => {
+    if (masterMenuCatererId) {
+      return displayedCatererMenus.find((m) => m.caterer_id === masterMenuCatererId) || displayedCatererMenus[0] || null;
+    }
+    if (activeCatererFilter !== "all") {
+      return displayedCatererMenus.find((m) => m.caterer_id === activeCatererFilter) || displayedCatererMenus[0] || null;
+    }
+    return displayedCatererMenus[0] || null;
+  }, [masterMenuCatererId, activeCatererFilter, displayedCatererMenus]);
+
+  const masterMenuDishes = useMemo(() => {
+    if (!currentMasterCatererMenu) return [];
+    const items = currentMasterCatererMenu.items || {};
+    const list = [];
+    for (const [cat, dishes] of Object.entries(items)) {
+      for (const d of dishes) {
+        list.push({ ...d, category: d.category || cat, catererId: currentMasterCatererMenu.caterer_id });
+      }
+    }
+    return list;
+  }, [currentMasterCatererMenu]);
+
+  const masterMenuCategories = useMemo(() => {
+    if (!currentMasterCatererMenu) return [];
+    return Object.keys(currentMasterCatererMenu.items || {});
+  }, [currentMasterCatererMenu]);
+
+  const currentMasterSelectedDishIds = useMemo(() => {
+    if (!currentMasterCatererMenu) return [];
+    const cid = currentMasterCatererMenu.caterer_id;
+    const catererSel = allSelections[cid] || {};
+    return Object.values(catererSel).flat();
+  }, [currentMasterCatererMenu, allSelections]);
+
+  const filteredMasterDishes = useMemo(() => {
+    return masterMenuDishes.filter((d) => {
+      // Category filter
+      if (masterMenuCatFilter !== "all" && String(d.category || "").toLowerCase() !== masterMenuCatFilter.toLowerCase()) {
+        return false;
+      }
+      // Search filter
+      if (masterMenuSearch.trim()) {
+        const q = masterMenuSearch.toLowerCase().trim();
+        const dName = String(d.name || "").toLowerCase();
+        const dDesc = String(d.description || "").toLowerCase();
+        const dCuisine = String(d.cuisine || "").toLowerCase();
+        if (!dName.includes(q) && !dDesc.includes(q) && !dCuisine.includes(q)) return false;
+      }
+      // Dietary filter
+      if (masterMenuDietFilter === "veg" && !d.veg) return false;
+      if (masterMenuDietFilter === "non-veg" && d.veg) return false;
+      return true;
+    });
+  }, [masterMenuDishes, masterMenuCatFilter, masterMenuSearch, masterMenuDietFilter]);
+
+  const toggleMasterDish = (dish) => {
+    if (!currentMasterCatererMenu) return;
+    const cid = currentMasterCatererMenu.caterer_id;
+    const cat = dish.category || "Main Course";
+    const catererSel = allSelections[cid] || {};
+    const catList = catererSel[cat] || [];
+    const isCurrentlySelected = catList.includes(dish.id);
+
+    if (isCurrentlySelected) {
+      updateAllSelections({
+        ...allSelections,
+        [cid]: {
+          ...catererSel,
+          [cat]: catList.filter((id) => id !== dish.id),
+        },
+      });
+      toast.success(`Removed "${dish.name}" from ${cat}`);
+    } else {
+      updateAllSelections({
+        ...allSelections,
+        [cid]: {
+          ...catererSel,
+          [cat]: [...catList, dish.id],
+        },
+      });
+      toast.success(`✓ Added "${dish.name}" to ${cat}`);
+    }
+  };
+
   const catererTabs = [
     { id: "all", name: `All Options (${displayedCatererMenus.length})` },
     ...displayedCatererMenus.map((c, i) => {
@@ -786,6 +882,50 @@ export default function MenuBuilder() {
     };
   }, [activeCatererFilter, displayedCatererMenus]);
 
+  const handleProceedToQuotation = async () => {
+    if (isSubmittingQuotation) return; // prevent double-click
+    setIsSubmittingQuotation(true);
+
+    let selObj = allSelections[activeCatererFilter] || {};
+    let dishIds = Object.values(selObj).flat();
+    let dishes = dishIds.map((id) => allDishMap[id]).filter(Boolean);
+    const catererMenu = displayedCatererMenus.find(c => c.caterer_id === activeCatererFilter) || displayedCatererMenus[0];
+    const catId = catererMenu?.caterer_id || catererMenu?.id || activeCatererFilter || "c-4b4fdf";
+    const totalAmount = dishes.reduce((sum, d) => sum + (Number(d.price) || 0) * guests, 0) || (draft.perPersonBudget || 500) * guests;
+
+    set({
+      activeQuotationDishes: dishes,
+      selectedMenu: allSelections,
+      selectedCatererId: catId,
+      selectedCaterers: [catId],
+    });
+
+    try {
+      localStorage.setItem("activeQuotationDishes", JSON.stringify(dishes));
+    } catch { }
+
+    try {
+      const qRes = await quotationService.createQuotation({
+        caterer_id: catId,
+        event: draft.eventType || "Event Gathering",
+        guests: guests,
+        total: totalAmount,
+        valid_till: "7 days",
+        notes: draft.notes || "",
+      });
+      if (qRes && qRes.id) {
+        toast.success(`Quotation ${qRes.id} sent to caterer!`);
+        navigate(`/quotations/${qRes.id}`);
+        return;
+      }
+    } catch (err) {
+      console.warn("Quotation creation API note:", err);
+    } finally {
+      setIsSubmittingQuotation(false);
+    }
+    navigate("/customer/quotations");
+  };
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -825,11 +965,10 @@ export default function MenuBuilder() {
                 {catererCuisines.map((c) => (
                   <span
                     key={c}
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold border ${
-                      preferredCuisines.some((p) => c.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(c.toLowerCase()))
-                        ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
-                        : "bg-muted text-muted-foreground border-border"
-                    }`}
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold border ${preferredCuisines.some((p) => c.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(c.toLowerCase()))
+                      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+                      : "bg-muted text-muted-foreground border-border"
+                      }`}
                   >
                     {c}
                   </span>
@@ -913,13 +1052,12 @@ export default function MenuBuilder() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <h4 className="font-display text-base font-semibold capitalize">{category}</h4>
                   {targetCount && (
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold ${
-                      catSelectedCount === targetCount
-                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                        : catSelectedCount > targetCount
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold ${catSelectedCount === targetCount
+                      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                      : catSelectedCount > targetCount
                         ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
                         : "bg-primary/10 text-primary border border-primary/20"
-                    }`}>
+                      }`}>
                       Target: {catSelectedCount} / {targetCount} items
                     </span>
                   )}
@@ -964,101 +1102,100 @@ export default function MenuBuilder() {
                       }
                       const slots = targetConfig?.slots || [];
                       return displayDishes.map((dish, dishIdx) => {
-                      const isSel = true;
-                      const applicableGuests = getDishGuestCount(dish, category);
-                      const slot = slots[dishIdx];
-                      const slotPref = (slot?.preference || "").trim();
-                      const matchesPref = slotPref && (
-                        String(dish.name || "").toLowerCase().includes(slotPref.toLowerCase()) ||
-                        String(dish.description || "").toLowerCase().includes(slotPref.toLowerCase())
-                      );
+                        const isSel = true;
+                        const applicableGuests = getDishGuestCount(dish, category);
+                        const slot = slots[dishIdx];
+                        const slotPref = (slot?.preference || "").trim();
+                        const matchesPref = slotPref && (
+                          String(dish.name || "").toLowerCase().includes(slotPref.toLowerCase()) ||
+                          String(dish.description || "").toLowerCase().includes(slotPref.toLowerCase())
+                        );
 
-                      return (
-                        <tr
-                          key={dish.id}
-                          className="transition-colors bg-[color-mix(in_oklab,var(--primary)_6%,transparent)]"
-                        >
-                          <td className="px-3 py-2.5">
-                            <div
-                              className={`grid h-5 w-5 place-items-center rounded border transition ${
-                                isSel ? "border-[var(--primary)] bg-[var(--primary)] text-white" : "border-border"
-                              }`}
-                            >
-                              {isSel && <Check className="h-3.5 w-3.5" />}
-                            </div>
-                          </td>
-                          <td className="px-3 py-2.5">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-medium text-foreground">{dish.name}</span>
-                              {dish.popular && (
-                                <Badge variant="gold">
-                                  <Star className="h-3 w-3" /> Popular
-                                </Badge>
+                        return (
+                          <tr
+                            key={dish.id}
+                            className="transition-colors bg-[color-mix(in_oklab,var(--primary)_6%,transparent)]"
+                          >
+                            <td className="px-3 py-2.5">
+                              <div
+                                className={`grid h-5 w-5 place-items-center rounded border transition ${isSel ? "border-[var(--primary)] bg-[var(--primary)] text-white" : "border-border"
+                                  }`}
+                              >
+                                {isSel && <Check className="h-3.5 w-3.5" />}
+                              </div>
+                            </td>
+                            <td className="px-3 py-2.5">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-medium text-foreground">{dish.name}</span>
+                                {dish.popular && (
+                                  <Badge variant="gold">
+                                    <Star className="h-3 w-3" /> Popular
+                                  </Badge>
+                                )}
+                              </div>
+                              {slotPref && (
+                                <div className="mt-1">
+                                  {matchesPref ? (
+                                    <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                                      <Check className="h-3 w-3" /> Matched your preference: "{slotPref}"
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1.5 text-[11px] text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-md font-medium">
+                                      <Info className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                                      This menu doesn't have "{slotPref}" — this is the recommended alternate item (click Replace to swap)
+                                    </span>
+                                  )}
+                                </div>
                               )}
-                            </div>
-                            {slotPref && (
-                              <div className="mt-1">
-                                {matchesPref ? (
-                                  <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                                    <Check className="h-3 w-3" /> Matched your preference: "{slotPref}"
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1.5 text-[11px] text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-md font-medium">
-                                    <Info className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
-                                    This menu doesn't have "{slotPref}" — this is the recommended alternate item (click Replace to swap)
+                            </td>
+                            <td className="px-3 py-2.5">
+                              {dish.cuisine ? (
+                                <span className="inline-flex items-center rounded-full bg-[var(--primary)]/10 px-2 py-0.5 text-[11px] font-semibold text-[var(--primary)] border border-[var(--primary)]/20">
+                                  {dish.cuisine}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">—</span>
+                              )}
+                            </td>
+                            <td className="px-3 py-2.5">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <DietaryBadge isVeg={dish.veg} />
+                                {(dish.is_spicy ?? dish.spicy) && (
+                                  <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold text-orange-600 border border-orange-500/20">
+                                    <Flame className="h-3 w-3" /> Spicy
                                   </span>
                                 )}
                               </div>
-                            )}
-                          </td>
-                          <td className="px-3 py-2.5">
-                            {dish.cuisine ? (
-                              <span className="inline-flex items-center rounded-full bg-[var(--primary)]/10 px-2 py-0.5 text-[11px] font-semibold text-[var(--primary)] border border-[var(--primary)]/20">
-                                {dish.cuisine}
-                              </span>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">—</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-2.5">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <DietaryBadge isVeg={dish.veg} />
-                              {(dish.is_spicy ?? dish.spicy) && (
-                                <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold text-orange-600 border border-orange-500/20">
-                                  <Flame className="h-3 w-3" /> Spicy
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-3 py-2.5 text-right">
-                            <div className="font-semibold">
-                              {AED(dish.price)}{" "}
-                              <span className="text-xs font-normal text-muted-foreground">/ person</span>
-                            </div>
-                            {isMixedDiet && (
-                              <div className="text-[10px] text-muted-foreground">
-                                {applicableGuests === guests
-                                  ? `For all ${guests} guests (${AED(dish.price * applicableGuests)})`
-                                  : `For ${applicableGuests} ${dish.veg ? "Veg" : "Non-Veg"} guests (${AED(dish.price * applicableGuests)})`}
-                              </div>
-                            )}
-                          </td>
-                          {showReplace && (
-                            <td className="px-3 py-2.5 text-right">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setReplacing({ catererId, cat: category, dishId: dish.id });
-                                }}
-                                className="text-xs font-medium text-[var(--primary)] hover:underline flex items-center gap-1 ml-auto"
-                              >
-                                <RefreshCcw className="h-3 w-3" />
-                                Replace
-                              </button>
                             </td>
-                          )}
-                        </tr>
-                      );
+                            <td className="px-3 py-2.5 text-right">
+                              <div className="font-semibold">
+                                {AED(dish.price)}{" "}
+                                <span className="text-xs font-normal text-muted-foreground">/ person</span>
+                              </div>
+                              {isMixedDiet && (
+                                <div className="text-[10px] text-muted-foreground">
+                                  {applicableGuests === guests
+                                    ? `For all ${guests} guests (${AED(dish.price * applicableGuests)})`
+                                    : `For ${applicableGuests} ${dish.veg ? "Veg" : "Non-Veg"} guests (${AED(dish.price * applicableGuests)})`}
+                                </div>
+                              )}
+                            </td>
+                            {showReplace && (
+                              <td className="px-3 py-2.5 text-right">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setReplacing({ catererId, cat: category, dishId: dish.id });
+                                  }}
+                                  className="text-xs font-medium text-[var(--primary)] hover:underline flex items-center gap-1 ml-auto"
+                                >
+                                  <RefreshCcw className="h-3 w-3" />
+                                  Replace
+                                </button>
+                              </td>
+                            )}
+                          </tr>
+                        );
                       });
                     })()}
                   </tbody>
@@ -1123,26 +1260,18 @@ export default function MenuBuilder() {
             </div>
           </div>
           {selectedMenuInfo.isSelected ? (
-            <Link
-              to="/quotations/QT-2201"
-              className="w-full sm:w-auto"
-              onClick={() => {
-                let selObj = allSelections[activeCatererFilter] || {};
-                let dishIds = Object.values(selObj).flat();
-                let dishes = dishIds.map((id) => allDishMap[id]).filter(Boolean);
-                set({
-                  activeQuotationDishes: dishes,
-                  selectedMenu: allSelections,
-                });
-                try {
-                  localStorage.setItem("activeQuotationDishes", JSON.stringify(dishes));
-                } catch {}
-              }}
+            <Button
+              variant="gold"
+              onClick={handleProceedToQuotation}
+              disabled={isSubmittingQuotation}
+              className="w-full sm:w-auto font-bold text-xs sm:text-sm h-10 px-4 shadow-md hover:shadow-lg transition-all duration-200 justify-center disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              <Button variant="gold" className="w-full sm:w-auto font-bold text-xs sm:text-sm h-10 px-4 shadow-md hover:shadow-lg transition-all duration-200 justify-center">
-                {selectedMenuInfo.fullText} <ArrowRight className="h-4 w-4 ml-1.5 shrink-0" />
-              </Button>
-            </Link>
+              {isSubmittingQuotation ? (
+                <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> Sending Quotation…</>
+              ) : (
+                <>{selectedMenuInfo.fullText} <ArrowRight className="h-4 w-4 ml-1.5 shrink-0" /></>
+              )}
+            </Button>
           ) : (
             <Button
               variant="outline"
@@ -1193,19 +1322,17 @@ export default function MenuBuilder() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveCatererFilter(tab.id)}
-                    className={`shrink-0 inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition whitespace-nowrap ${
-                      activeCatererFilter === tab.id
-                        ? "bg-[var(--primary)] text-white shadow"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                    }`}
+                    className={`shrink-0 inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition whitespace-nowrap ${activeCatererFilter === tab.id
+                      ? "bg-[var(--primary)] text-white shadow"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      }`}
                   >
                     {tab.id !== "all" && <ChefHat className="h-3.5 w-3.5" />}
                     {tab.name}
                     {stats && stats.selectedCount > 0 && (
                       <span
-                        className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-                          activeCatererFilter === tab.id ? "bg-white/20" : "bg-[var(--primary)]/10 text-[var(--primary)]"
-                        }`}
+                        className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${activeCatererFilter === tab.id ? "bg-white/20" : "bg-[var(--primary)]/10 text-[var(--primary)]"
+                          }`}
                       >
                         {stats.selectedCount}
                       </span>
@@ -1360,11 +1487,11 @@ export default function MenuBuilder() {
                 {activeCatererFilter === "all"
                   ? "All Menus Total"
                   : (() => {
-                      const idx = displayedCatererMenus.findIndex((m) => m.caterer_id === activeCatererFilter);
-                      const cat = displayedCatererMenus[idx];
-                      const code = cat ? getCatererCode(cat) : "";
-                      return `Menu ${idx + 1} (${code}) Selection`;
-                    })()}
+                    const idx = displayedCatererMenus.findIndex((m) => m.caterer_id === activeCatererFilter);
+                    const cat = displayedCatererMenus[idx];
+                    const code = cat ? getCatererCode(cat) : "";
+                    return `Menu ${idx + 1} (${code}) Selection`;
+                  })()}
               </div>
               {activeStats.selectedCount > 0 && (
                 <span className="text-xs font-semibold text-[var(--primary)]">{activeStats.selectedCount} items</span>
@@ -1400,35 +1527,27 @@ export default function MenuBuilder() {
 
           {/* Dynamic Action Button in Middle of Sidebar */}
           {selectedMenuInfo.isSelected ? (
-            <Link
-              to="/quotations/QT-2201"
-              className="block"
-              onClick={() => {
-                let selObj = allSelections[activeCatererFilter] || {};
-                let dishIds = Object.values(selObj).flat();
-                let dishes = dishIds.map((id) => allDishMap[id]).filter(Boolean);
-                set({
-                  activeQuotationDishes: dishes,
-                  selectedMenu: allSelections,
-                });
-                try {
-                  localStorage.setItem("activeQuotationDishes", JSON.stringify(dishes));
-                } catch {}
-              }}
+            <Button
+              variant="gold"
+              onClick={handleProceedToQuotation}
+              disabled={isSubmittingQuotation}
+              className="w-full py-3.5 px-4 font-bold text-xs sm:text-sm shadow-md hover:shadow-xl transition-all duration-200 flex items-center justify-between group rounded-xl disabled:opacity-70 disabled:cursor-not-allowed disabled:scale-100"
             >
-              <Button
-                variant="gold"
-                className="w-full py-3.5 px-4 font-bold text-xs sm:text-sm shadow-md hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 flex items-center justify-between group rounded-xl"
-              >
-                <div className="flex items-center gap-2 truncate text-left">
-                  <Check className="h-4 w-4 shrink-0 text-white" />
-                  <span className="truncate">
-                    Selected {selectedMenuInfo.text} · Get Quotation
-                  </span>
+              {isSubmittingQuotation ? (
+                <div className="flex items-center gap-2 w-full justify-center">
+                  <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  <span>Sending Quotation…</span>
                 </div>
-                <ArrowRight className="h-4 w-4 shrink-0 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 truncate text-left">
+                    <Check className="h-4 w-4 shrink-0 text-white" />
+                    <span className="truncate">Selected {selectedMenuInfo.text} · Get Quotation</span>
+                  </div>
+                  <ArrowRight className="h-4 w-4 shrink-0 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
+            </Button>
           ) : (
             <Button
               variant="outline"
@@ -1453,11 +1572,10 @@ export default function MenuBuilder() {
                     <button
                       key={m.caterer_id}
                       onClick={() => setActiveCatererFilter(m.caterer_id)}
-                      className={`w-full flex items-center justify-between rounded-lg border px-3 py-2 text-xs transition hover:bg-muted/50 ${
-                        activeCatererFilter === m.caterer_id
-                          ? "border-[var(--primary)] bg-[color-mix(in_oklab,var(--primary)_5%,transparent)]"
-                          : "border-border"
-                      }`}
+                      className={`w-full flex items-center justify-between rounded-lg border px-3 py-2 text-xs transition hover:bg-muted/50 ${activeCatererFilter === m.caterer_id
+                        ? "border-[var(--primary)] bg-[color-mix(in_oklab,var(--primary)_5%,transparent)]"
+                        : "border-border"
+                        }`}
                     >
                       <div className="flex items-center gap-2 truncate pr-2">
                         <ChefHat className="h-3 w-3 text-muted-foreground shrink-0" />
@@ -1521,11 +1639,10 @@ export default function MenuBuilder() {
                 return (
                   <div
                     key={catererId}
-                    className={`flex flex-col rounded-2xl border p-5 transition ${
-                      isActive
-                        ? "border-2 border-[var(--primary)] bg-[color-mix(in_oklab,var(--primary)_3%,transparent)] shadow-lg"
-                        : "border-border bg-background/50"
-                    }`}
+                    className={`flex flex-col rounded-2xl border p-5 transition ${isActive
+                      ? "border-2 border-[var(--primary)] bg-[color-mix(in_oklab,var(--primary)_3%,transparent)] shadow-lg"
+                      : "border-border bg-background/50"
+                      }`}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
@@ -1567,9 +1684,8 @@ export default function MenuBuilder() {
                                 return (
                                   <div
                                     key={d.id}
-                                    className={`flex justify-between text-xs py-1 px-1.5 rounded transition ${
-                                      isChecked ? "bg-[var(--primary)]/10 font-medium text-foreground" : "text-muted-foreground"
-                                    }`}
+                                    className={`flex justify-between text-xs py-1 px-1.5 rounded transition ${isChecked ? "bg-[var(--primary)]/10 font-medium text-foreground" : "text-muted-foreground"
+                                      }`}
                                   >
                                     <span className="truncate flex items-center gap-1.5">
                                       {isChecked ? (
@@ -2037,6 +2153,319 @@ export default function MenuBuilder() {
           </div>
         </div>
       )}
+
+      {/* ── Master Menu Popup Modal ────────────────────────────────────── */}
+      {isMasterMenuOpen && currentMasterCatererMenu && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-3xl max-h-[90vh] flex flex-col rounded-3xl border border-border bg-surface shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+    {/* Header */}
+    <div className="p-5 border-b border-border/70 flex items-center justify-between gap-3 bg-muted/20">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-to-tr from-[var(--primary)] to-amber-500 text-white shadow-md">
+          <UtensilsCrossed className="h-5 w-5" />
+        </div>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="font-display text-lg font-bold text-foreground">
+              Master Menu
+            </h3>
+            <span className="inline-flex items-center rounded-md bg-[var(--primary)]/10 px-2 py-0.5 text-xs font-mono font-bold text-[var(--primary)] border border-[var(--primary)]/25">
+              Code: {getCatererCode(currentMasterCatererMenu)}
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground truncate">
+            {currentMasterCatererMenu.caterer_name || "Caterer"} · Select items to add to your menu
+          </p>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => {
+          setIsMasterMenuOpen(false);
+          setMasterMenuSearch("");
+          setMasterMenuCatFilter("all");
+          setMasterMenuDietFilter("all");
+        }}
+        className="rounded-full p-2 hover:bg-muted text-muted-foreground hover:text-foreground transition cursor-pointer shrink-0"
+      >
+        <X className="h-5 w-5" />
+      </button>
     </div>
+
+    {/* Caterer Switcher if multiple caterers */}
+    {displayedCatererMenus.length > 1 && (
+      <div className="px-5 py-2.5 bg-muted/40 border-b border-border/50 flex items-center gap-2 overflow-x-auto no-scrollbar">
+        <span className="text-xs font-semibold text-muted-foreground shrink-0">Menu:</span>
+        {displayedCatererMenus.map((c, idx) => {
+          const isCur = c.caterer_id === currentMasterCatererMenu.caterer_id;
+          const code = getCatererCode(c);
+          const selCount = (allSelections[c.caterer_id] ? Object.values(allSelections[c.caterer_id]).flat() : []).length;
+          return (
+            <button
+              key={c.caterer_id}
+              type="button"
+              onClick={() => {
+                setMasterMenuCatererId(c.caterer_id);
+                setMasterMenuCatFilter("all");
+              }}
+              className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1 text-xs font-bold transition whitespace-nowrap cursor-pointer ${isCur
+                  ? "bg-[var(--primary)] text-white shadow-xs"
+                  : "bg-background border border-border text-muted-foreground hover:border-[var(--primary)] hover:text-foreground"
+                }`}
+            >
+              <span>Menu {idx + 1} ({code})</span>
+              <span className={`text-[10px] rounded-full px-1.5 py-0.2 ${isCur ? "bg-black/20 text-white" : "bg-muted text-muted-foreground"}`}>
+                {selCount}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    )}
+
+    {/* Search & Category Filter */}
+    <div className="p-4 border-b border-border/60 space-y-3 bg-surface">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <input
+          type="text"
+          value={masterMenuSearch}
+          onChange={(e) => setMasterMenuSearch(e.target.value)}
+          placeholder="Search dishes in master menu..."
+          className="h-10 w-full rounded-xl border border-input bg-background pl-9 pr-8 text-xs focus:outline-none focus:border-[var(--primary)]"
+        />
+        {masterMenuSearch && (
+          <button
+            type="button"
+            onClick={() => setMasterMenuSearch("")}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 cursor-pointer"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+
+      {/* Category and Dietary Chips */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+        {/* Category Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full sm:w-auto pb-1 sm:pb-0">
+          <button
+            type="button"
+            onClick={() => setMasterMenuCatFilter("all")}
+            className={`rounded-full px-3 py-1 text-xs font-semibold transition shrink-0 cursor-pointer ${masterMenuCatFilter === "all"
+                ? "bg-[var(--primary)] text-white"
+                : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+              }`}
+          >
+            All ({masterMenuDishes.length})
+          </button>
+          {masterMenuCategories.map((cat) => {
+            const count = masterMenuDishes.filter((d) => (d.category || "").toLowerCase() === cat.toLowerCase()).length;
+            const isActive = masterMenuCatFilter.toLowerCase() === cat.toLowerCase();
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setMasterMenuCatFilter(cat)}
+                className={`rounded-full px-3 py-1 text-xs font-semibold transition shrink-0 cursor-pointer ${isActive
+                    ? "bg-[var(--primary)] text-white"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                  }`}
+              >
+                {cat} ({count})
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Dietary Filter */}
+        <div className="inline-flex rounded-xl border border-border bg-muted/60 p-0.5 text-xs shrink-0 self-end sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setMasterMenuDietFilter("all")}
+            className={`rounded-lg px-2.5 py-1 font-medium transition cursor-pointer ${masterMenuDietFilter === "all" ? "bg-background text-foreground font-bold shadow-2xs" : "text-muted-foreground hover:text-foreground"
+              }`}
+          >
+            All Types
+          </button>
+          <button
+            type="button"
+            onClick={() => setMasterMenuDietFilter("veg")}
+            className={`rounded-lg px-2.5 py-1 font-medium transition cursor-pointer ${masterMenuDietFilter === "veg" ? "bg-emerald-600 text-white font-bold shadow-2xs" : "text-emerald-700 dark:text-emerald-400 hover:text-emerald-800"
+              }`}
+          >
+            🌱 Veg
+          </button>
+          <button
+            type="button"
+            onClick={() => setMasterMenuDietFilter("non-veg")}
+            className={`rounded-lg px-2.5 py-1 font-medium transition cursor-pointer ${masterMenuDietFilter === "non-veg" ? "bg-rose-600 text-white font-bold shadow-2xs" : "text-rose-700 dark:text-rose-400 hover:text-rose-800"
+              }`}
+          >
+            🍗 Non-Veg
+          </button>
+        </div>
+      </div>
+    </div>
+
+    {/* Dish List */}
+    <div className="flex-1 overflow-y-auto p-4 space-y-2.5 min-h-[260px]">
+      {filteredMasterDishes.length > 0 ? (
+        filteredMasterDishes.map((dish) => {
+          const isSelected = currentMasterSelectedDishIds.includes(dish.id);
+          return (
+            <div
+              key={dish.id}
+              onClick={() => toggleMasterDish(dish)}
+              className={`flex items-center justify-between gap-3 p-3.5 rounded-2xl border transition-all cursor-pointer select-none ${isSelected
+                  ? "border-[var(--primary)] bg-[color-mix(in_oklab,var(--primary)_8%,transparent)] shadow-xs"
+                  : "border-border/80 bg-background hover:border-border hover:bg-muted/20"
+                }`}
+            >
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                {/* Checkbox */}
+                <div
+                  className={`grid h-5 w-5 place-items-center rounded border transition shrink-0 ${isSelected
+                      ? "border-[var(--primary)] bg-[var(--primary)] text-white"
+                      : "border-border bg-background"
+                    }`}
+                >
+                  {isSelected && <Check className="h-3.5 w-3.5" />}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`font-semibold text-sm ${isSelected ? "text-foreground font-bold" : "text-foreground"}`}>
+                      {dish.name}
+                    </span>
+                    {dish.category && (
+                      <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                        {dish.category}
+                      </span>
+                    )}
+                    {dish.cuisine && (
+                      <span className="inline-flex items-center rounded-md bg-[var(--primary)]/10 px-1.5 py-0.5 text-[10px] font-semibold text-[var(--primary)] border border-[var(--primary)]/20">
+                        {dish.cuisine}
+                      </span>
+                    )}
+                    <DietaryBadge isVeg={dish.veg} size="sm" />
+                    {dish.popular && (
+                      <Badge variant="gold" size="sm">
+                        <Star className="h-2.5 w-2.5" /> Popular
+                      </Badge>
+                    )}
+                    {(dish.is_spicy ?? dish.spicy) && (
+                      <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold text-orange-600 border border-orange-500/20">
+                        <Flame className="h-3 w-3" /> Spicy
+                      </span>
+                    )}
+                  </div>
+                  {dish.description && (
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{dish.description}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="text-right">
+                  <div className="text-sm font-bold text-foreground">{AED(dish.price)}</div>
+                  <div className="text-[10px] text-muted-foreground">/ person</div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleMasterDish(dish);
+                  }}
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${isSelected
+                      ? "border border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20"
+                      : "bg-[var(--primary)] text-white hover:bg-[var(--primary)]/90 shadow-xs active:scale-95"
+                    }`}
+                >
+                  {isSelected ? (
+                    <>
+                      <Check className="h-3.5 w-3.5" />
+                      <span>Selected</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>Select</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          );
+        })
+      ) : (
+        <div className="text-center py-12 space-y-2">
+          <p className="text-sm font-semibold text-foreground">No dishes found matching your filters</p>
+          <p className="text-xs text-muted-foreground">Try clearing search or filter terms to view all master menu dishes.</p>
+        </div>
+      )}
+    </div>
+
+    {/* Footer */}
+    {(() => {
+      const cid = currentMasterCatererMenu.caterer_id;
+      const stats = getMenuStats(cid);
+      return (
+        <div className="p-4 border-t border-border bg-surface flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
+          <div className="text-xs">
+            <span className="font-bold text-foreground text-sm">
+              {stats.selectedCount} dishes selected
+            </span>{" "}
+            · <span className="font-bold text-[var(--primary)] text-sm">{AED(stats.perPerson)}/person</span>{" "}
+            <span className="text-muted-foreground font-normal">
+              (Subtotal: {AED(stats.subtotal)} for {guests} guests)
+            </span>
+          </div>
+
+          <Button
+            size="sm"
+            onClick={() => {
+              setIsMasterMenuOpen(false);
+              setMasterMenuSearch("");
+              setMasterMenuCatFilter("all");
+              setMasterMenuDietFilter("all");
+            }}
+            className="bg-gradient-to-r from-[var(--primary)] to-amber-600 hover:from-[var(--primary)]/90 hover:to-amber-500 text-white font-bold px-5 py-2 rounded-xl cursor-pointer"
+          >
+            <Check className="h-4 w-4 mr-1.5" />
+            <span>Done &amp; View Menu</span>
+          </Button>
+        </div>
+      );
+    })()}
+  </div>
+</div>
+      )}
+
+{/* ── Floating Add Button ────────────────────────────────────────── */ }
+<div className="fixed bottom-6 right-6 z-40 animate-in fade-in slide-in-from-bottom-4 duration-300">
+  <button
+    type="button"
+    onClick={() => {
+      setMasterMenuCatererId(activeCatererFilter !== "all" ? activeCatererFilter : displayedCatererMenus[0]?.caterer_id);
+      setIsMasterMenuOpen(true);
+    }}
+    className="group flex items-center gap-2.5 rounded-full bg-gradient-to-r from-[var(--primary)] via-amber-600 to-amber-500 hover:brightness-110 text-white font-bold text-sm px-5 py-3.5 shadow-2xl hover:shadow-[0_10px_30px_rgba(202,138,4,0.45)] border border-white/25 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+    title="Open Master Menu to add items"
+  >
+    <div className="grid h-6 w-6 place-items-center rounded-full bg-white/25 text-white">
+      <Plus className="h-4 w-4 stroke-[3]" />
+    </div>
+    <span>Add Items</span>
+    {selectedMenuInfo.isSelected && (
+      <span className="rounded-full bg-black/25 px-2 py-0.5 text-xs font-mono font-bold tracking-wide">
+        {selectedMenuInfo.code}
+      </span>
+    )}
+  </button>
+</div>
+    </div >
   );
 }

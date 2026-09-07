@@ -65,11 +65,14 @@ export default function Login() {
       .then((google) => {
         if (!isMounted) return;
         try {
-          google.accounts.id.initialize({
-            client_id: clientId,
-            callback: handleGoogleLoginSuccess,
-            auto_select: false,
-          });
+          if (window.__google_gsi_initialized !== clientId) {
+            google.accounts.id.initialize({
+              client_id: clientId,
+              callback: handleGoogleLoginSuccess,
+              auto_select: false,
+            });
+            window.__google_gsi_initialized = clientId;
+          }
           if (googleButtonRef.current) {
             google.accounts.id.renderButton(googleButtonRef.current, {
               theme: "outline",

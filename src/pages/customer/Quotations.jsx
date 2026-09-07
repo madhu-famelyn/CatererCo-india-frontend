@@ -5,6 +5,7 @@ import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Table, THead, TR, TH, TD } from "@/components/ui/Table";
+import { Badge } from "@/components/ui/Badge";
 import { quotationService } from "@/services/quotationService";
 import { AED, formatDate } from "@/lib/format";
 

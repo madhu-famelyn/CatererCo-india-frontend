@@ -21,9 +21,25 @@ export const bookingService = {
     return res.data;
   },
 
+  async confirmBooking(id) {
+    const res = await api.patch(`/bookings/${id}/confirm`);
+    return res.data;
+  },
+
+  async rejectBooking(id) {
+    const res = await api.patch(`/bookings/${id}/reject`);
+    return res.data;
+  },
+
+  async completeBooking(id) {
+    const res = await api.patch(`/bookings/${id}/complete`);
+    return res.data;
+  },
+
   async deleteBooking(id) {
     const res = await api.delete(`/bookings/${id}`);
     return res.data;
   },
 };
+
 

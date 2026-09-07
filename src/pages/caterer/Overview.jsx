@@ -17,6 +17,7 @@ export default function CatererOverview() {
   const stats = data?.stats || {};
   const revenueSeries = data?.revenue_series || [];
   const recentBookings = data?.recent_bookings || [];
+  const recentQuotations = data?.recent_quotations || [];
 
   return (
     <>
@@ -80,6 +81,37 @@ export default function CatererOverview() {
           ))}
           {!isLoading && recentBookings.length === 0 && (
             <div className="py-4 text-sm text-muted-foreground">No bookings yet.</div>
+          )}
+        </div>
+      </Card>
+
+      {/* Pending Quotation Requests */}
+      <Card className="mt-6 p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold">Quotation Requests</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">Incoming quotation requests from customers.</p>
+          </div>
+          <a href="/caterer/quotations" className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--primary)] hover:underline">
+            View all <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+        <div className="divide-y divide-border">
+          {isLoading && <div className="py-4 text-sm text-muted-foreground">Loading…</div>}
+          {recentQuotations.map(q => (
+            <div key={q.id} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
+              <div>
+                <div className="font-semibold">{q.event}</div>
+                <div className="text-xs text-muted-foreground">{q.id} · {q.guests} guests</div>
+              </div>
+              <div className="flex items-center gap-4">
+                <Badge variant={q.status === "approved" ? "success" : q.status === "rejected" ? "danger" : "warning"}>{q.status}</Badge>
+                <div className="font-semibold">{AED(q.total)}</div>
+              </div>
+            </div>
+          ))}
+          {!isLoading && recentQuotations.length === 0 && (
+            <div className="py-4 text-sm text-muted-foreground">No quotation requests yet.</div>
           )}
         </div>
       </Card>

@@ -91,6 +91,12 @@ export default function CatererRegister() {
   const [selectedCuisines, setSelectedCuisines] = useState([]);
   const [customCuisine, setCustomCuisine] = useState("");
 
+  // ── Service Types state ───────────────────────────────────────────────────
+  const [offersBuffet, setOffersBuffet] = useState(false);
+  const [buffetPrice, setBuffetPrice] = useState("");
+  const [offersPackedDelivery, setOffersPackedDelivery] = useState(false);
+  const [packedDeliveryPrice, setPackedDeliveryPrice] = useState("");
+
   const toggleCuisine = (value) => {
     setSelectedCuisines((prev) =>
       prev.includes(value) ? prev.filter((c) => c !== value) : [...prev, value]
@@ -180,6 +186,11 @@ export default function CatererRegister() {
         iso_14001_certificate: isEcoFriendly ? (primaryIsoCert || "Certified") : undefined,
         certifications: certificationsList,
         documents: documentsList.length > 0 ? documentsList : undefined,
+        // Service types
+        offers_buffet: offersBuffet,
+        buffet_price_per_plate: offersBuffet && buffetPrice !== "" ? Number(buffetPrice) : null,
+        offers_packed_delivery: offersPackedDelivery,
+        packed_delivery_price_per_box: offersPackedDelivery && packedDeliveryPrice !== "" ? Number(packedDeliveryPrice) : null,
       };
 
       const res = await catererService.registerCaterer(payload);
@@ -662,6 +673,122 @@ export default function CatererRegister() {
               </div>
             </div>
           )}
+        </div>
+        {/* ─────────────────────────────────────────────────────────────── */}
+
+        {/* ── Service Types Section ─────────────────────────────────────── */}
+        <div className="rounded-xl border border-sky-500/30 bg-sky-50/40 dark:bg-sky-950/20 p-4 space-y-4">
+          <div className="flex items-center gap-2.5">
+            <div className="grid h-8 w-8 place-items-center rounded-lg bg-sky-500/15 text-sky-600 dark:text-sky-400">
+              <ChefHat className="h-4 w-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Service Types Offered</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Tell customers what kind of service you provide and your pricing.</p>
+            </div>
+          </div>
+
+          {/* Buffet / Live Station */}
+          <div className={`rounded-xl border p-4 transition-all ${
+            offersBuffet ? "border-sky-500/40 bg-sky-500/5" : "border-border/60 bg-background"
+          }`}>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-foreground">🍽️ Buffet / Live Station</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Do you offer buffet-style or live cooking station service?</p>
+              </div>
+              <div className="inline-flex rounded-lg border border-border bg-background p-1 text-xs font-semibold shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setOffersBuffet(true)}
+                  className={`rounded-md px-3.5 py-1.5 transition ${
+                    offersBuffet ? "bg-sky-600 text-white shadow-xs" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setOffersBuffet(false); setBuffetPrice(""); }}
+                  className={`rounded-md px-3.5 py-1.5 transition ${
+                    !offersBuffet ? "bg-muted text-foreground shadow-xs font-bold" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  No
+                </button>
+              </div>
+            </div>
+
+            {offersBuffet && (
+              <div className="mt-3 animate-in fade-in-50 duration-200">
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Buffet Price per Plate (₹)</label>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-foreground">₹</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    placeholder="e.g. 450"
+                    value={buffetPrice}
+                    onChange={(e) => setBuffetPrice(e.target.value)}
+                    className="w-40"
+                  />
+                  <span className="text-xs text-muted-foreground">per plate / per person</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Packed Delivery Box */}
+          <div className={`rounded-xl border p-4 transition-all ${
+            offersPackedDelivery ? "border-amber-500/40 bg-amber-500/5" : "border-border/60 bg-background"
+          }`}>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-foreground">📦 Packed Delivery Box</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Do you offer packed meal boxes for delivery orders?</p>
+              </div>
+              <div className="inline-flex rounded-lg border border-border bg-background p-1 text-xs font-semibold shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setOffersPackedDelivery(true)}
+                  className={`rounded-md px-3.5 py-1.5 transition ${
+                    offersPackedDelivery ? "bg-amber-500 text-white shadow-xs" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setOffersPackedDelivery(false); setPackedDeliveryPrice(""); }}
+                  className={`rounded-md px-3.5 py-1.5 transition ${
+                    !offersPackedDelivery ? "bg-muted text-foreground shadow-xs font-bold" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  No
+                </button>
+              </div>
+            </div>
+
+            {offersPackedDelivery && (
+              <div className="mt-3 animate-in fade-in-50 duration-200">
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Packed Delivery Price per Box (₹)</label>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-foreground">₹</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    placeholder="e.g. 250"
+                    value={packedDeliveryPrice}
+                    onChange={(e) => setPackedDeliveryPrice(e.target.value)}
+                    className="w-40"
+                  />
+                  <span className="text-xs text-muted-foreground">per box / per meal</span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         {/* ─────────────────────────────────────────────────────────────── */}
 

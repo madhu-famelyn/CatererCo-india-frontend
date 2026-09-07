@@ -101,30 +101,32 @@ export default function CatererQuotations() {
                 ) : (
                   <>
                     <div className="font-display text-2xl font-bold">{AED(q.total)}</div>
-                    <div className="mt-2 flex flex-wrap gap-2 md:justify-end">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => { setEditingId(q.id); setNewTotal(q.total); }}
-                      >
-                        Adjust price
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="danger"
-                        disabled={rejectMutation.isPending}
-                        onClick={() => rejectMutation.mutate(q.id)}
-                      >
-                        Reject
-                      </Button>
-                      <Button
-                        size="sm"
-                        disabled={approveMutation.isPending}
-                        onClick={() => approveMutation.mutate(q.id)}
-                      >
-                        Approve & send
-                      </Button>
-                    </div>
+                    {q.status === "pending" && (
+                      <div className="mt-2 flex flex-wrap gap-2 md:justify-end">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => { setEditingId(q.id); setNewTotal(q.total); }}
+                        >
+                          Adjust price
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          disabled={rejectMutation.isPending}
+                          onClick={() => rejectMutation.mutate(q.id)}
+                        >
+                          Reject
+                        </Button>
+                        <Button
+                          size="sm"
+                          disabled={approveMutation.isPending}
+                          onClick={() => approveMutation.mutate(q.id)}
+                        >
+                          Approve & send
+                        </Button>
+                      </div>
+                    )}
                   </>
                 )}
               </div>

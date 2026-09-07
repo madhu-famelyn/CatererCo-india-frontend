@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2, X, Building2, MapPin } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
@@ -7,41 +7,81 @@ import { Input, Field } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { emirates } from "@/data/mock";
 import { useAuth } from "@/store/authStore";
+import { api } from "@/lib/api";
 
 export default function Profile() {
   const { user, login } = useAuth();
 
   const nameParts = (user?.name || "").trim().split(" ");
-  const [firstName, setFirstName] = useState(user?.first_name || nameParts[0] || "Sonu");
-  const [lastName, setLastName] = useState(user?.last_name || nameParts.slice(1).join(" ") || "Sah");
-  const [email, setEmail] = useState(user?.email || "sonusah22388@gmail.com");
+  const [firstName, setFirstName] = useState(user?.first_name || nameParts[0] || "");
+  const [lastName, setLastName] = useState(user?.last_name || nameParts.slice(1).join(" ") || "");
+  const [email, setEmail] = useState(user?.email || "");
   const [phone, setPhone] = useState(user?.phone || user?.phoneNumber || "");
-  const [emirate, setEmirate] = useState(user?.emirate || "Bangalore");
-  const [language, setLanguage] = useState("English");
+  const [emirate, setEmirate] = useState(user?.emirate || user?.preferred_emirate || user?.city || "");
+  const [language, setLanguage] = useState(user?.language || "English");
+  const [saving, setSaving] = useState(false);
+
+  // Hydrate from live backend on load
+  useEffect(() => {
+    async function loadFreshUser() {
+      try {
+        const uid = user?.id;
+        const res = uid ? await api.get(`/users/${uid}`) : await api.get(`/users/me`);
+        if (res.data) {
+          if (res.data.first_name) setFirstName(res.data.first_name);
+          if (res.data.last_name) setLastName(res.data.last_name);
+          if (res.data.email) setEmail(res.data.email);
+          if (res.data.phone) setPhone(res.data.phone);
+          if (res.data.preferred_emirate || res.data.city) setEmirate(res.data.preferred_emirate || res.data.city);
+          if (res.data.language) setLanguage(res.data.language);
+        }
+      } catch (e) {}
+    }
+    loadFreshUser();
+  }, [user?.id]);
 
   // Address state
-  const [addresses, setAddresses] = useState([
-    { id: "1", title: "Home", emirate: "Bangalore", detail: "402, 100ft Road, Indiranagar, Bangalore" },
-    { id: "2", title: "Office", emirate: "Hyderabad", detail: "Cyber Towers, Hitec City, Hyderabad" },
-  ]);
+  const [addresses, setAddresses] = useState([]);
 
   // Address modal state
   const [editingAddress, setEditingAddress] = useState(null); // { id?, title, emirate, detail }
   const [showAddressModal, setShowAddressModal] = useState(false);
 
-  const handleSaveProfile = (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
-    const updatedUser = {
-      ...user,
-      name: `${firstName} ${lastName}`.trim(),
-      first_name: firstName,
-      last_name: lastName,
-      email,
-      phone,
-      emirate,
-    };
-    login(updatedUser, "customer");
-    toast.success("Profile & mobile number updated successfully!");
+    setSaving(true);
+    try {
+      const payload = {
+        first_name: firstName,
+        last_name: lastName,
+        phone,
+        preferred_emirate: emirate,
+        city: emirate,
+        language,
+      };
+      const uid = user?.id;
+      const res = uid ? await api.patch(`/users/${uid}`, payload) : await api.patch(`/users/me`, payload);
+
+      const updatedUser = {
+        ...user,
+        name: `${firstName} ${lastName}`.trim() || user?.name,
+        first_name: firstName,
+        last_name: lastName,
+        email,
+        phone,
+        emirate,
+        city: emirate,
+        preferred_emirate: emirate,
+        language,
+      };
+      login(updatedUser, "customer");
+      toast.success("Profile updated successfully!");
+    } catch (err) {
+      console.error("Failed to save profile to API:", err);
+      toast.error("Failed to save profile to server");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleOpenEditAddress = (addr) => {

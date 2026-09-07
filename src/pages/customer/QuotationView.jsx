@@ -116,14 +116,15 @@ export default function QuotationView() {
     setIsApproving(true);
 
     try {
+      const catererId = draft.selectedCatererId || draft.caterer_id || (draft.selectedCaterers && draft.selectedCaterers[0]) || "c-4b4fdf";
       await bookingService.createBooking({
-        caterer_id: "c1",
+        caterer_id: catererId,
         event: eventTypeLabel,
         event_date: eventDate,
         guests: guests,
         total: total,
-        address: draft.address || "Mumbai, India",
-        emirate: draft.emirate || "Mumbai",
+        address: draft.address || "Hyderabad, India",
+        emirate: draft.emirate || "Hyderabad",
         notes: draft.notes || "",
       });
       queryClient.invalidateQueries({ queryKey: ["customer-bookings"] });
@@ -138,6 +139,7 @@ export default function QuotationView() {
         }
       }, 800);
     } catch (e) {
+      console.error("Booking error:", e);
       setStatus("approved");
       toast.success("Quotation approved successfully!");
       if (!isAuthenticated) {
