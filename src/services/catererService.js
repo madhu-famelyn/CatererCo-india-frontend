@@ -47,4 +47,16 @@ export const catererService = {
     const res = await api.get(`/caterers/${catererId}/packages`);
     return res.data.packages || [];
   },
+
+  // Check whether AI Generate Package is available (limited to once every 7 days)
+  async getPackageGenerationStatus(catererId) {
+    const res = await api.get(`/caterers/${catererId}/packages/generation-status`);
+    return res.data;
+  },
+
+  // Record that AI Generate Package was just used, starting a new 7-day cooldown
+  async markPackageGenerated(catererId) {
+    const res = await api.post(`/caterers/${catererId}/packages/mark-generated`);
+    return res.data;
+  },
 };

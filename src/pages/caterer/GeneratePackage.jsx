@@ -9,7 +9,7 @@ import {
   Wand2, Sparkles, Loader2, AlertCircle, Star, Package,
   ChevronRight, RefreshCw, Copy, CheckCircle2, ChefHat, Info, ChevronDown, ChevronUp, Layers, Save,
   Plus, Minus, Check, CheckSquare, Square, ListFilter, Calculator, CheckCheck, Eye, Trash2, X,
-  Download, FileSpreadsheet, FileText, Share2
+  Download, FileSpreadsheet, FileText, Share2, Repeat, Clock
 } from "lucide-react";
 
 import { menuService } from "@/services/menuService";
@@ -500,7 +500,95 @@ export default function GeneratePackage() {
     enabled: Boolean(catererId),
   });
 
+  // AI Generate Package is limited to once every 7 days per caterer
+  const { data: generationStatus, refetch: refetchGenerationStatus } = useQuery({
+    queryKey: ["package-generation-status", catererId],
+    queryFn: () => catererService.getPackageGenerationStatus(catererId),
+    enabled: Boolean(catererId),
+  });
+
+  const canGenerate = generationStatus?.allowed !== false;
+  const nextAvailableDate = generationStatus?.next_available_at ? new Date(generationStatus.next_available_at) : null;
+  const nextAvailableLabel = nextAvailableDate
+    ? nextAvailableDate.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
+    : null;
+
+  const markGenerationUsed = async () => {
+    if (!catererId) return;
+    try {
+      await catererService.markPackageGenerated(catererId);
+      refetchGenerationStatus();
+    } catch {
+      // Non-fatal — the caterer already has their packages, just refresh status silently.
+    }
+  };
+
   const [viewingSavedPkg, setViewingSavedPkg] = useState(null); // { pkg, index }
+
+  // ── Replace Item Picker (swap a package dish with another item from that menu category) ──
+  const [replaceModal, setReplaceModal] = useState(null); // { scope, pkgIndex, dishIndex, category, currentName, otherDishNames }
+  const [replaceSearch, setReplaceSearch] = useState("");
+  const [replacingItemId, setReplacingItemId] = useState(null); // id of the item currently being applied
+
+  const recalcPackagePrice = (dishes) => dishes.reduce((sum, d) => sum + (Number(d.price) || 0), 0);
+
+  const openReplaceModal = (scope, pkgIndex, dishIndex, dish) => {
+    const pkgDishes = scope === "generated" ? generatedPackages[pkgIndex].dishes : viewingSavedPkg.pkg.dishes;
+    const otherDishNames = pkgDishes
+      .filter((_, di) => di !== dishIndex)
+      .map((d) => (d.name || "").toLowerCase());
+    setReplaceModal({
+      scope,
+      pkgIndex,
+      dishIndex,
+      category: dish.category || "General Course",
+      currentName: dish.name,
+      otherDishNames,
+    });
+    setReplaceSearch("");
+    setReplacingItemId(null);
+  };
+
+  const applyDishReplacement = (item) => {
+    if (!replaceModal || replacingItemId) return; // block double-clicks while a replacement is in flight
+    const { scope, pkgIndex, dishIndex, category } = replaceModal;
+    setReplacingItemId(item.id);
+    const newDish = {
+      name: item.name,
+      category,
+      cuisine: item.cuisine || "Specialty",
+      isVeg: Boolean(item.veg),
+      price: Number(item.price) || 0,
+    };
+
+    if (scope === "generated") {
+      setGeneratedPackages((prev) => prev.map((pkg, i) => {
+        if (i !== pkgIndex) return pkg;
+        const dishes = pkg.dishes.map((d, di) => (di === dishIndex ? newDish : d));
+        return { ...pkg, dishes, pricePerPerson: recalcPackagePrice(dishes) };
+      }));
+      toast.success(`✅ Replaced with "${item.name}"`);
+      setReplacingItemId(null);
+      setReplaceModal(null);
+      setReplaceSearch("");
+    } else if (scope === "saved") {
+      const updatedDishes = viewingSavedPkg.pkg.dishes.map((d, di) => (di === dishIndex ? newDish : d));
+      const updatedPkg = { ...viewingSavedPkg.pkg, dishes: updatedDishes, pricePerPerson: recalcPackagePrice(updatedDishes) };
+      const updatedList = savedPackages.map((p, i) => (i === viewingSavedPkg.index ? updatedPkg : p));
+      catererService.savePackages(catererId, updatedList)
+        .then(() => {
+          refetchSaved();
+          setViewingSavedPkg({ pkg: updatedPkg, index: viewingSavedPkg.index });
+          toast.success(`✅ Replaced with "${item.name}"`);
+          setReplaceModal(null);
+          setReplaceSearch("");
+        })
+        .catch(() => toast.error("Failed to update saved package."))
+        .finally(() => {
+          setReplacingItemId(null);
+        });
+    }
+  };
 
   // Dynamic cuisines strictly matching what the caterer selected in their Business Profile / Registration
   const catererCuisines = useMemo(() => {
@@ -761,6 +849,10 @@ export default function GeneratePackage() {
 
 
   const generatePackages = async () => {
+    if (!canGenerate) {
+      setPkgError(`AI Generate Package is limited to once every 7 days. You can generate new packages again on ${nextAvailableLabel || "your next available date"}.`);
+      return;
+    }
     if (pkgCount === "other" && (!customPkgCount || Number(customPkgCount) < 1)) {
       setPkgError("Please enter a valid number of packages (e.g. 6 or 8).");
       return;
@@ -1024,6 +1116,7 @@ Respond ONLY with valid JSON. Format:
           const fallbackPkgs = generateLocalFallbackPackages();
           setGeneratedPackages(fallbackPkgs);
           toast.success(`✨ Generated ${fallbackPkgs.length} unique packages using smart catering engine!`);
+          markGenerationUsed();
           return;
         }
         throw new Error(`OpenAI error ${res.status}: ${errorData?.error?.message || "Request failed"}`);
@@ -1037,11 +1130,13 @@ Respond ONLY with valid JSON. Format:
       const uniquePkgs = deduplicatePackages(packages);
       setGeneratedPackages(uniquePkgs);
       toast.success(`✨ ${uniquePkgs.length} AI packages generated via ChatGPT!`);
+      markGenerationUsed();
     } catch (err) {
       console.warn("OpenAI failed, falling back to smart generator:", err);
       const fallbackPkgs = generateLocalFallbackPackages();
       setGeneratedPackages(fallbackPkgs);
       toast.success(`✨ Generated ${fallbackPkgs.length} unique packages successfully!`);
+      markGenerationUsed();
     } finally {
       setPkgLoading(false);
     }
@@ -1061,7 +1156,20 @@ Respond ONLY with valid JSON. Format:
     <>
       <PageHeader
         title="AI Generate Package"
-        description="Use AI to instantly create professional catering packages from your master menu."
+        description="Use AI to instantly create professional catering packages from your master menu. Limited to once every 7 days per caterer."
+        action={
+          <span
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold ${
+              canGenerate
+                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+            }`}
+            title="AI Generate Package can be used once every 7 days"
+          >
+            <Clock className="h-3.5 w-3.5" />
+            {canGenerate ? "Weekly generation available" : `Next generation: ${nextAvailableLabel}`}
+          </span>
+        }
       />
 
       {/* Stats banner */}
@@ -1449,22 +1557,32 @@ Respond ONLY with valid JSON. Format:
           </div>
         )}
 
+        {!canGenerate && (
+          <div className="mt-4 flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-sm text-amber-700 dark:text-amber-300">
+            <Info className="h-4 w-4 shrink-0" />
+            AI Generate Package is limited to once every 7 days per caterer. You can generate new packages again on{" "}
+            <strong>{nextAvailableLabel || "your next available date"}</strong>.
+          </div>
+        )}
 
         <div className="mt-5 flex items-center gap-3 flex-wrap">
           <button
             onClick={generatePackages}
-            disabled={pkgLoading}
+            disabled={pkgLoading || !canGenerate}
+            title={!canGenerate ? `Available again on ${nextAvailableLabel}` : undefined}
             className="inline-flex items-center gap-2 rounded-xl px-7 py-2.5 text-sm font-bold text-white transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
             style={{ background: "linear-gradient(135deg, #b8860b 0%, #d4a017 50%, #f0c040 100%)" }}
           >
             {pkgLoading ? (
               <><Loader2 className="h-4 w-4 animate-spin" /> Generating Packages…</>
+            ) : !canGenerate ? (
+              <><Clock className="h-4 w-4" /> Available on {nextAvailableLabel}</>
             ) : (
               <><Wand2 className="h-4 w-4" /> Generate {effectivePkgCount} Package{effectivePkgCount > 1 ? "s" : ""}</>
             )}
           </button>
           {generatedPackages.length > 0 && (
-            <button onClick={generatePackages} disabled={pkgLoading} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition">
+            <button onClick={generatePackages} disabled={pkgLoading || !canGenerate} title={!canGenerate ? `Available again on ${nextAvailableLabel}` : undefined} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition disabled:opacity-50 disabled:cursor-not-allowed">
               <RefreshCw className="h-3.5 w-3.5" /> Regenerate
             </button>
           )}
@@ -1701,29 +1819,29 @@ Respond ONLY with valid JSON. Format:
               {/* Group dishes by category */}
               {(() => {
                 const grouped = {};
-                (viewingSavedPkg.pkg.dishes || []).forEach(d => {
+                (viewingSavedPkg.pkg.dishes || []).forEach((d, originalIdx) => {
                   const cat = d.category || "General Course";
                   if (!grouped[cat]) grouped[cat] = [];
-                  grouped[cat].push(d);
+                  grouped[cat].push({ dish: d, originalIdx });
                 });
 
                 return (
                   <div className="space-y-3">
-                    {Object.entries(grouped).map(([cat, dishes]) => (
+                    {Object.entries(grouped).map(([cat, entries]) => (
                       <div key={cat} className="rounded-xl border border-border/80 bg-surface/40 p-3 space-y-2">
                         <div className="flex items-center justify-between text-xs font-bold text-foreground pb-1 border-b border-border/40">
                           <div className="flex items-center gap-1.5">
                             <span className="h-2 w-2 rounded-full bg-[var(--primary)]" />
                             {cat}
                           </div>
-                          <span className="text-[11px] text-muted-foreground font-normal">{dishes.length} item{dishes.length !== 1 ? 's' : ''}</span>
+                          <span className="text-[11px] text-muted-foreground font-normal">{entries.length} item{entries.length !== 1 ? 's' : ''}</span>
                         </div>
 
                         <div className="grid gap-2 sm:grid-cols-2">
-                          {dishes.map((dish, di) => {
+                          {entries.map(({ dish, originalIdx }) => {
                             const cuisineName = getDishCuisine(dish);
                             return (
-                              <div key={di} className="flex items-center justify-between gap-2 rounded-lg bg-background border border-border/60 p-2.5 text-xs shadow-xs">
+                              <div key={originalIdx} className="flex items-center justify-between gap-2 rounded-lg bg-background border border-border/60 p-2.5 text-xs shadow-xs">
                                 <div className="flex items-center gap-2 min-w-0 flex-1">
                                   <span className={`h-2 w-2 rounded-full shrink-0 ${dish.isVeg ? 'bg-emerald-500 ring-2 ring-emerald-500/20' : 'bg-rose-500 ring-2 ring-rose-500/20'}`} />
                                   <span className="font-semibold text-foreground truncate" title={dish.name}>{dish.name}</span>
@@ -1733,8 +1851,18 @@ Respond ONLY with valid JSON. Format:
                                     </span>
                                   )}
                                 </div>
-                                <div className="shrink-0 font-bold text-foreground">
-                                  {dish.price ? `₹${dish.price}` : "Included"}
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <div className="font-bold text-foreground">
+                                    {dish.price ? `₹${dish.price}` : "Included"}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => openReplaceModal("saved", viewingSavedPkg.index, originalIdx, dish)}
+                                    className="inline-flex items-center gap-1 rounded-md border border-[var(--primary)]/30 bg-[var(--primary)]/10 px-1.5 py-1 text-[10px] font-bold text-[var(--primary)] hover:bg-[var(--primary)]/20 transition"
+                                    title={`Replace with another ${cat} item from your menu`}
+                                  >
+                                    <Repeat className="h-3 w-3" /> Replace
+                                  </button>
                                 </div>
                               </div>
                             );
@@ -1971,15 +2099,15 @@ Respond ONLY with valid JSON. Format:
                   {/* Dishes Grouped by Course / Category (Image 1 Format) */}
                   {(() => {
                     const grouped = {};
-                    (pkg.dishes || []).forEach(d => {
+                    (pkg.dishes || []).forEach((d, originalIdx) => {
                       const cat = d.category || "General Course";
                       if (!grouped[cat]) grouped[cat] = [];
-                      grouped[cat].push(d);
+                      grouped[cat].push({ dish: d, originalIdx });
                     });
 
                     return (
                       <div className="space-y-3 pt-1">
-                        {Object.entries(grouped).map(([categoryName, dishes]) => (
+                        {Object.entries(grouped).map(([categoryName, entries]) => (
                           <div key={categoryName} className="rounded-2xl border border-border/70 bg-background/95 p-3.5 shadow-xs space-y-2">
                             {/* Category Header */}
                             <div className="flex items-center justify-between text-xs font-bold text-foreground pb-1.5 border-b border-border/40">
@@ -1988,17 +2116,17 @@ Respond ONLY with valid JSON. Format:
                                 <span className="font-bold text-sm text-foreground">{categoryName}</span>
                               </div>
                               <span className="text-xs font-medium text-muted-foreground">
-                                {dishes.length} item{dishes.length !== 1 ? "s" : ""}
+                                {entries.length} item{entries.length !== 1 ? "s" : ""}
                               </span>
                             </div>
 
                             {/* Dishes in this Category */}
                             <div className="space-y-2 pt-0.5">
-                              {dishes.map((dish, di) => {
+                              {entries.map(({ dish, originalIdx }) => {
                                 const cuisineName = getDishCuisine(dish);
                                 return (
                                   <div
-                                    key={di}
+                                    key={originalIdx}
                                     className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 hover:bg-muted/40 px-3.5 py-2.5 text-xs transition-colors"
                                   >
                                     <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -2015,11 +2143,21 @@ Respond ONLY with valid JSON. Format:
                                         </span>
                                       )}
                                     </div>
-                                    {dish.price !== undefined && dish.price !== null && (
-                                      <span className="shrink-0 font-bold text-foreground text-xs">
-                                        ₹{dish.price}
-                                      </span>
-                                    )}
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      {dish.price !== undefined && dish.price !== null && (
+                                        <span className="font-bold text-foreground text-xs">
+                                          ₹{dish.price}
+                                        </span>
+                                      )}
+                                      <button
+                                        type="button"
+                                        onClick={() => openReplaceModal("generated", idx, originalIdx, dish)}
+                                        className="inline-flex items-center gap-1 rounded-md border border-[var(--primary)]/30 bg-[var(--primary)]/10 px-1.5 py-1 text-[10px] font-bold text-[var(--primary)] hover:bg-[var(--primary)]/20 transition"
+                                        title={`Replace with another ${categoryName} item from your menu`}
+                                      >
+                                        <Repeat className="h-3 w-3" /> Replace
+                                      </button>
+                                    </div>
                                   </div>
                                 );
                               })}
@@ -2036,6 +2174,111 @@ Respond ONLY with valid JSON. Format:
           <p className="mt-5 text-xs text-muted-foreground text-center">
             ✨ These packages are custom tailored to your catering menu. Click the copy button on any package to share with customers.
           </p>
+        </div>
+      )}
+
+      {/* ── Replace Item Picker Modal ── */}
+      {replaceModal && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="w-full max-w-lg rounded-2xl bg-card border border-border shadow-2xl max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between gap-3 p-4 border-b border-border">
+              <div className="min-w-0">
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                  <Repeat className="h-4 w-4 text-[var(--primary)]" /> Replace Item — {replaceModal.category}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                  Currently: <strong className="text-foreground">{replaceModal.currentName}</strong>
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={Boolean(replacingItemId)}
+                onClick={() => { setReplaceModal(null); setReplaceSearch(""); }}
+                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {replacingItemId && (
+              <div className="flex items-center gap-2 bg-emerald-500/10 border-b border-emerald-500/20 px-4 py-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Applying replacement — please wait…
+              </div>
+            )}
+
+            <div className="p-3 border-b border-border">
+              <input
+                type="text"
+                value={replaceSearch}
+                onChange={(e) => setReplaceSearch(e.target.value)}
+                placeholder={`Search ${replaceModal.category} items…`}
+                disabled={Boolean(replacingItemId)}
+                className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30 disabled:opacity-50"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              {(() => {
+                const items = (menu[replaceModal.category] || []).filter((it) =>
+                  !replaceSearch.trim() || it.name.toLowerCase().includes(replaceSearch.trim().toLowerCase())
+                );
+
+                if (items.length === 0) {
+                  return (
+                    <div className="py-8 text-center text-sm text-muted-foreground">
+                      No items found in &quot;{replaceModal.category}&quot; from your menu.
+                      <br />
+                      <a href="/caterer/menu" className="font-semibold text-[var(--primary)] hover:underline">
+                        Add dishes to your Master Menu
+                      </a>
+                    </div>
+                  );
+                }
+
+                return items.map((it) => {
+                  const isCurrent = it.name.toLowerCase() === (replaceModal.currentName || "").toLowerCase();
+                  const alreadyInPkg = !isCurrent && replaceModal.otherDishNames?.includes(it.name.toLowerCase());
+                  const isApplying = replacingItemId === it.id;
+                  return (
+                    <button
+                      key={it.id}
+                      type="button"
+                      disabled={alreadyInPkg || Boolean(replacingItemId)}
+                      onClick={() => applyDishReplacement(it)}
+                      className={`w-full flex items-center justify-between gap-3 rounded-xl border px-3.5 py-2.5 text-left text-xs transition ${
+                        isApplying
+                          ? "border-emerald-500/60 bg-emerald-500/10"
+                          : isCurrent
+                            ? "border-[var(--primary)]/50 bg-[var(--primary)]/5"
+                            : alreadyInPkg
+                              ? "border-border/40 bg-muted/10 opacity-40 cursor-not-allowed"
+                              : "border-border/60 bg-background hover:border-[var(--primary)]/50 hover:bg-muted/30"
+                      } ${replacingItemId && !isApplying ? "opacity-40 cursor-not-allowed" : ""}`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        {isApplying ? (
+                          <Loader2 className="h-3 w-3 shrink-0 animate-spin text-emerald-600" />
+                        ) : (
+                          <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${it.veg ? "bg-emerald-500 ring-2 ring-emerald-500/20" : "bg-rose-500 ring-2 ring-rose-500/20"}`} />
+                        )}
+                        <span className="font-semibold text-foreground truncate">{it.name}</span>
+                        {it.cuisine && (
+                          <span className="shrink-0 rounded-md bg-[var(--primary)]/10 px-1.5 py-0.5 text-[10px] font-bold text-[var(--primary)] border border-[var(--primary)]/20">
+                            {it.cuisine}
+                          </span>
+                        )}
+                        {isApplying && <span className="shrink-0 text-[10px] font-bold text-emerald-600">Replacing…</span>}
+                        {!isApplying && isCurrent && <span className="shrink-0 text-[10px] font-bold text-emerald-600">Current</span>}
+                        {!isApplying && alreadyInPkg && <span className="shrink-0 text-[10px] font-bold text-muted-foreground">In package</span>}
+                      </div>
+                      <span className="shrink-0 font-bold text-foreground">₹{it.price}</span>
+                    </button>
+                  );
+                });
+              })()}
+            </div>
+          </div>
         </div>
       )}
     </>

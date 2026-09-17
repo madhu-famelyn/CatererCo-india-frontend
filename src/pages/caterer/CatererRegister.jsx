@@ -63,6 +63,22 @@ export default function CatererRegister() {
     );
   };
 
+  // ── Kitchen / Event Photos State (for Admin Verification) ─────────────────
+  const [kitchenPhotosList, setKitchenPhotosList] = useState([]);
+
+  const addKitchenPhotos = (files) => {
+    const newEntries = Array.from(files).map((file) => ({
+      id: `${Date.now()}-${Math.random()}`,
+      file,
+      preview: URL.createObjectURL(file),
+    }));
+    setKitchenPhotosList((prev) => [...prev, ...newEntries]);
+  };
+
+  const removeKitchenPhoto = (id) => {
+    setKitchenPhotosList((prev) => prev.filter((p) => p.id !== id));
+  };
+
   // ── Eco-Friendly & Certifications state ──────────────────────────────────
   const [isEcoFriendly, setIsEcoFriendly] = useState(false);
   const [ecoPractices, setEcoPractices] = useState([]);
@@ -126,6 +142,19 @@ export default function CatererRegister() {
     }
   };
 
+  const uploadPhoto = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await api.post("/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return res.data.url;
+    } catch {
+      return null;
+    }
+  };
+
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     try {
@@ -165,6 +194,12 @@ export default function CatererRegister() {
         }
       }
 
+      const kitchenPhotoUrls = [];
+      for (const photo of kitchenPhotosList) {
+        const url = await uploadPhoto(photo.file);
+        if (url) kitchenPhotoUrls.push(url);
+      }
+
       const payload = {
         name: data.company,
         trade_license: data.license,
@@ -186,6 +221,7 @@ export default function CatererRegister() {
         iso_14001_certificate: isEcoFriendly ? (primaryIsoCert || "Certified") : undefined,
         certifications: certificationsList,
         documents: documentsList.length > 0 ? documentsList : undefined,
+        kitchen_photos: kitchenPhotoUrls,
         // Service types
         offers_buffet: offersBuffet,
         buffet_price_per_plate: offersBuffet && buffetPrice !== "" ? Number(buffetPrice) : null,
@@ -427,9 +463,9 @@ export default function CatererRegister() {
 
         {/* ── Business Documents Section ─────────────────────────────────── */}
         <div className="rounded-xl border border-border bg-surface/50 p-4 space-y-3.5">
-          <div className="flex items-center justify-between border-b border-border/50 pb-2.5">
+          <div className="flex flex-col gap-2 border-b border-border/50 pb-2.5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
-              <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary">
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
                 <FileText className="h-4 w-4" />
               </div>
               <div>
@@ -437,7 +473,7 @@ export default function CatererRegister() {
                 <p className="text-xs text-muted-foreground">Upload required business verification documents (Registration, Certificates, etc.)</p>
               </div>
             </div>
-            <span className="text-[10px] text-muted-foreground">PDF or Images accepted</span>
+            <span className="shrink-0 whitespace-nowrap text-[10px] text-muted-foreground sm:pl-2">PDF or Images accepted</span>
           </div>
 
           <div className="space-y-3">
@@ -528,6 +564,54 @@ export default function CatererRegister() {
             >
               <Plus className="h-3.5 w-3.5" /> Add Another Document
             </button>
+          </div>
+        </div>
+
+        {/* ── Kitchen / Event Photos Section (for Admin Verification) ────── */}
+        <div className="rounded-xl border border-border bg-surface/50 p-4 space-y-3.5">
+          <div className="flex flex-col gap-2 border-b border-border/50 pb-2.5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                <ImageIcon className="h-4 w-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Kitchen / Event Photos</h3>
+                <p className="text-xs text-muted-foreground">Upload photos of your kitchen setup or past event work. These will be sent to our Admin team for verification.</p>
+              </div>
+            </div>
+            <span className="shrink-0 whitespace-nowrap text-[10px] text-muted-foreground sm:pl-2">Images only</span>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            {kitchenPhotosList.map((photo) => (
+              <div key={photo.id} className="relative h-24 w-24 overflow-hidden rounded-lg border border-border group">
+                <img src={photo.preview} alt="Kitchen / event" className="h-full w-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => removeKitchenPhoto(photo.id)}
+                  className="absolute top-1 right-1 grid h-5 w-5 place-items-center rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 transition"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+
+            <label className="flex h-24 w-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border bg-surface text-muted-foreground hover:border-[var(--primary)] hover:text-foreground transition">
+              <Upload className="h-4 w-4" />
+              <span className="text-[10px] font-medium">Add Photos</span>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => {
+                  if (e.target.files?.length) {
+                    addKitchenPhotos(e.target.files);
+                    e.target.value = "";
+                  }
+                }}
+                className="hidden"
+              />
+            </label>
           </div>
         </div>
 
