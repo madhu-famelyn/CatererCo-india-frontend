@@ -4,10 +4,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host :: --port 8080",
-    "build": "vite build",
+    "build": "vite build --emptyOutDir",
     "build:dev": "vite build --mode development",
-    "predeploy": "vite build",
-    "deploy": "vite build && npx wrangler deploy",
+    "predeploy": "vite build --emptyOutDir",
+    "deploy": "vite build --emptyOutDir && npx wrangler deploy",
     "preview": "vite preview"
   },
   "dependencies": {
