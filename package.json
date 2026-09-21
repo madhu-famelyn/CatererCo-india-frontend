@@ -4,10 +4,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host :: --port 8080",
-    "build": "vite build --emptyOutDir",
+    "build": "vite build --emptyOutDir && rm -f dist/_redirects",
     "build:dev": "vite build --mode development",
-    "predeploy": "vite build --emptyOutDir",
-    "deploy": "vite build --emptyOutDir && npx wrangler deploy",
+    "predeploy": "vite build --emptyOutDir && rm -f dist/_redirects",
+    "deploy": "vite build --emptyOutDir && rm -f dist/_redirects && npx wrangler deploy",
     "preview": "vite preview"
   },
   "dependencies": {
