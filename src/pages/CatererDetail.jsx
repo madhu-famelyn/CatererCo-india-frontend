@@ -8,10 +8,7 @@ import {
   Award,
   ArrowLeft,
   Calendar,
-  ChefHat,
   Users,
-  Phone,
-  Mail,
   Building2,
   Utensils,
   Sparkles,
@@ -114,12 +111,9 @@ export default function CatererDetail() {
         <div className="relative overflow-hidden rounded-3xl border border-border bg-card shadow-soft">
           <div className="relative h-64 md:h-80 w-full bg-muted overflow-hidden">
             {c.cover ? (
-              <img src={c.cover} alt={c.name} className="h-full w-full object-cover" />
+              <img src={c.cover} alt={c.display_id || "Caterer"} className="h-full w-full object-cover" />
             ) : (
-              <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-amber-500/20 via-primary/10 to-background p-6">
-                <ChefHat className="h-16 w-16 text-primary/60 mb-2" />
-                <span className="font-display text-2xl font-bold">{c.name}</span>
-              </div>
+              <div className="h-full w-full bg-gradient-to-br from-amber-500/20 via-primary/10 to-background" />
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
@@ -144,7 +138,7 @@ export default function CatererDetail() {
                     <MapPin className="h-3.5 w-3.5 text-amber-400" /> {c.location || `${c.address || 'Dubai'}, ${c.emirate || 'Dubai'}`}
                   </span>
                 </div>
-                <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-white">{c.name}</h1>
+                <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-white">{c.display_id || c.id}</h1>
               </div>
 
               <div className="flex items-center gap-3">
@@ -175,7 +169,7 @@ export default function CatererDetail() {
                 {/* About Section */}
                 <div>
                   <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                    <Building2 className="h-5 w-5 text-primary" /> About {c.name}
+                    <Building2 className="h-5 w-5 text-primary" /> About {c.display_id || c.id}
                   </h3>
                   <p className="text-sm leading-relaxed text-muted-foreground">
                     {c.about || "Leading luxury catering service providing tailored menus, live cooking stations, and traditional Emirati & international hospitality for corporate events, weddings, majlis, and private parties."}
@@ -217,26 +211,6 @@ export default function CatererDetail() {
                     ⚡ Guaranteed response within 18 minutes
                   </p>
                 </Card>
-
-                <Card className="p-5 space-y-3">
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Caterer Info</h4>
-                  {c.phone && (
-                    <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
-                      <Phone className="h-4 w-4 text-primary shrink-0" />
-                      <span>{c.phone}</span>
-                    </div>
-                  )}
-                  {c.email && (
-                    <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
-                      <Mail className="h-4 w-4 text-primary shrink-0" />
-                      <span>{c.email}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
-                    <MapPin className="h-4 w-4 text-primary shrink-0" />
-                    <span>{c.address || c.location || "Mumbai, India"}</span>
-                  </div>
-                </Card>
               </div>
             </div>
           </div>
@@ -249,7 +223,7 @@ export default function CatererDetail() {
               <h2 className="font-display text-2xl font-bold flex items-center gap-2">
                 <Utensils className="h-6 w-6 text-primary" /> Signature Menu & Dishes
               </h2>
-              <p className="text-xs text-muted-foreground mt-1">Explore sample offerings provided by {c.name}</p>
+              <p className="text-xs text-muted-foreground mt-1">Explore sample offerings provided by {c.display_id || c.id}</p>
             </div>
           </div>
 

@@ -1,66 +1,12 @@
 import { Link } from "react-router-dom";
-import { Search, Sparkles, ShieldCheck, Clock, ArrowRight, Star, Quote } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Search, Sparkles, ShieldCheck, Clock, Star, Quote } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { CategoryCard } from "@/components/marketing/CategoryCard";
-import { CatererCard } from "@/components/marketing/CatererCard";
 import { eventCategories, testimonials, emirates } from "@/data/mock";
-import { catererService } from "@/services/catererService";
 import heroBg from "@/assets/hero-bg.jpg";
 
-function FeaturedCaterersSection({ caterers }) {
-  if (!caterers || caterers.length === 0) return null;
-
-  // Duplicate list for seamless infinite CSS loop
-  const list = [...caterers, ...caterers];
-  const count = caterers.length;
-  // Each card 360px + 24px gap
-  const singleSetWidth = count * (360 + 24);
-
-  return (
-    <section className="py-20 overflow-hidden">
-      <div className="mx-auto max-w-7xl px-6 mb-10 flex items-end justify-between gap-6">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-[var(--primary)]">Featured</p>
-          <h2 className="mt-2 font-display text-4xl">Top-rated caterers this month</h2>
-        </div>
-        <Link to="/browse">
-          <Button variant="outline" size="sm">See all <ArrowRight className="h-4 w-4" /></Button>
-        </Link>
-      </div>
-
-      {/* Pure CSS marquee — zero JS re-renders, GPU-accelerated */}
-      <div className="relative w-full overflow-hidden py-4">
-        <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-20 bg-gradient-to-r from-background to-transparent" />
-        <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-20 bg-gradient-to-l from-background to-transparent" />
-
-        <div
-          className="flex gap-6 will-change-transform"
-          style={{
-            width: `${singleSetWidth * 2}px`,
-            animation: `marquee ${count * 5}s linear infinite`,
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.animationPlayState = "paused"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.animationPlayState = "running"; }}
-        >
-          {list.map((c, i) => (
-            <div key={`${c.id}-${i}`} className="w-[360px] shrink-0 transition-transform duration-300 hover:scale-105 hover:z-20">
-              <CatererCard c={c} />
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 export default function Landing() {
-  const { data: caterers = [] } = useQuery({
-    queryKey: ["caterers"],
-    queryFn: () => catererService.getCaterers({ sort_by: "rating" }),
-  });
-
   return (
     <div className="dark bg-background text-foreground min-h-screen">
       {/* Hero — full viewport, cinematic dark */}
@@ -137,9 +83,6 @@ export default function Landing() {
           {eventCategories.map((c) => <CategoryCard key={c.id} cat={c} />)}
         </div>
       </section>
-
-      {/* Featured Caterers Continuous Running Marquee with Center Highlight */}
-      <FeaturedCaterersSection caterers={caterers} />
 
       {/* How it works — Premium timeline design */}
       <section className="border-y border-border">

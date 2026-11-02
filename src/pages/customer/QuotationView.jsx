@@ -95,7 +95,7 @@ export default function QuotationView() {
         });
       }
     } else {
-      const fallbackPp = draft.perPersonBudget || 500;
+      const fallbackPp = draft.perPersonBudget || 100;
       result.push({
         label: `Custom Package (${guests} guests @ ₹${fallbackPp}/pp)`,
         subtext: "",
@@ -305,7 +305,7 @@ export default function QuotationView() {
             <div className="mt-4 border-t border-border pt-3 space-y-1.5 text-xs">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Target budget</span>
-                <span className="font-medium">₹{(draft.perPersonBudget || 150).toLocaleString("en-IN")} / person</span>
+                <span className="font-medium">₹{(draft.perPersonBudget || 100).toLocaleString("en-IN")} / person</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Effective per person</span>

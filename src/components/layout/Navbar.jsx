@@ -1,5 +1,5 @@
 import { Link, NavLink } from "react-router-dom";
-import { Menu, Moon, Sun, ChefHat } from "lucide-react";
+import { Menu, Moon, Sun } from "lucide-react";
 import { useState } from "react";
 import { useUI } from "@/store/uiStore";
 import { Button } from "@/components/ui/Button";
@@ -19,9 +19,6 @@ export function Navbar() {
     <header className="sticky top-0 z-40 border-b border-border/60 glass">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 md:px-6">
         <Link to="/" className="flex items-center gap-2">
-          <div className="grid h-9 w-9 place-items-center rounded-xl gradient-primary text-white">
-            <ChefHat className="h-5 w-5" />
-          </div>
           <div className="leading-tight">
             <div className="font-display text-base font-semibold">Caterer<span className="text-gradient-gold">Co</span></div>
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Catering Marketplace</div>

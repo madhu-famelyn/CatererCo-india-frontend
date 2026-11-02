@@ -485,15 +485,15 @@ export default function EventWizard() {
                     <button
                       type="button"
                       onClick={() => {
-                        const newGuests = Math.max(1, (draft.guestCount || 100) - 10);
-                        const perPerson = draft.perPersonBudget || 150;
+                        const newGuests = Math.max(1, (draft.guestCount || 100) - 1);
+                        const perPerson = draft.perPersonBudget || 100;
                         set({
                           guestCount: newGuests,
                           budget: Math.round(perPerson * newGuests),
                         });
                       }}
                       className="h-8 w-8 grid place-items-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition cursor-pointer"
-                      title="Decrease 10 guests"
+                      title="Decrease 1 guest"
                     >
                       <Minus className="h-4 w-4" />
                     </button>
@@ -506,7 +506,7 @@ export default function EventWizard() {
                         value={draft.guestCount || 100}
                         onChange={(e) => {
                           const newGuests = Math.max(1, +e.target.value);
-                          const perPerson = draft.perPersonBudget || 150;
+                          const perPerson = draft.perPersonBudget || 100;
                           set({
                             guestCount: newGuests,
                             budget: Math.round(perPerson * newGuests),
@@ -520,15 +520,15 @@ export default function EventWizard() {
                     <button
                       type="button"
                       onClick={() => {
-                        const newGuests = (draft.guestCount || 100) + 10;
-                        const perPerson = draft.perPersonBudget || 150;
+                        const newGuests = (draft.guestCount || 100) + 1;
+                        const perPerson = draft.perPersonBudget || 100;
                         set({
                           guestCount: newGuests,
                           budget: Math.round(perPerson * newGuests),
                         });
                       }}
                       className="h-8 w-8 grid place-items-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition cursor-pointer"
-                      title="Increase 10 guests"
+                      title="Increase 1 guest"
                     >
                       <Plus className="h-4 w-4" />
                     </button>
@@ -550,7 +550,7 @@ export default function EventWizard() {
                       </p>
                     </div>
                     <div className="text-xs font-medium text-muted-foreground bg-background border border-border px-2.5 py-1 rounded-lg self-start sm:self-auto">
-                      Calculation: <span className="font-bold text-foreground">{AED(draft.perPersonBudget || 500)}</span> × <span className="font-bold text-foreground">{draft.guestCount || 100}</span> = <span className="font-bold text-[var(--primary)]">{AED(draft.budget || 50000)}</span>
+                      Calculation: <span className="font-bold text-foreground">{AED(draft.perPersonBudget || 100)}</span> × <span className="font-bold text-foreground">{draft.guestCount || 100}</span> = <span className="font-bold text-[var(--primary)]">{AED(draft.budget || 10000)}</span>
                     </div>
                   </div>
 
@@ -581,7 +581,7 @@ export default function EventWizard() {
                             });
                           }}
                           className="h-11 w-full rounded-xl border border-input bg-surface pl-12 pr-4 text-base font-bold text-foreground focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]"
-                          placeholder="e.g. 50000"
+                          placeholder="e.g. 10000"
                         />
                       </div>
                     </div>
@@ -593,7 +593,7 @@ export default function EventWizard() {
                           Per-Person Target <span className="text-red-500 font-bold ml-0.5">*</span>
                         </label>
                         <span className="text-xs font-bold text-[var(--primary)]">
-                          {AED(draft.perPersonBudget || 500)} / guest
+                          {AED(draft.perPersonBudget || 100)} / guest
                         </span>
                       </div>
 
@@ -605,7 +605,7 @@ export default function EventWizard() {
                           type="number"
                           min="10"
                           step="25"
-                          value={draft.perPersonBudget || 500}
+                          value={draft.perPersonBudget || ""}
                           onChange={(e) => {
                             const val = Math.max(0, +e.target.value);
                             const guests = draft.guestCount || 100;
@@ -615,7 +615,7 @@ export default function EventWizard() {
                             });
                           }}
                           className="h-11 w-full rounded-xl border border-input bg-surface pl-12 pr-14 text-base font-bold text-foreground focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]"
-                          placeholder="e.g. 500"
+                          placeholder="e.g. 100"
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
                           / person
@@ -1177,7 +1177,7 @@ export default function EventWizard() {
           <span className="font-bold text-foreground">{draft.guestCount || 100} Guests</span>
           <span className="text-muted-foreground">·</span>
           <span className="font-bold text-[var(--primary)]">
-            {AED(draft.budget)} ({AED(draft.perPersonBudget || 150)} / person)
+            {AED(draft.budget)} ({AED(draft.perPersonBudget || 100)} / person)
           </span>
         </div>
       </div>

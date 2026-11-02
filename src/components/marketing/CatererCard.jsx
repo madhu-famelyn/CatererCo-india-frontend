@@ -14,16 +14,11 @@ export function CatererCard({ c }) {
         {hasCover ? (
           <img
             src={c.cover}
-            alt={c.name}
+            alt={c.display_id || "Caterer"}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-amber-500/10 via-primary/5 to-muted p-4 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xs">
-              <span className="font-display text-xl font-bold">{c.name ? c.name.charAt(0).toUpperCase() : "C"}</span>
-            </div>
-            <span className="mt-2 text-xs font-semibold text-foreground/80">{c.name}</span>
-          </div>
+          <div className="h-full w-full bg-gradient-to-br from-amber-500/10 via-primary/5 to-muted" />
         )}
         <div className="absolute left-3 top-3">
           {rating ? (
@@ -37,7 +32,7 @@ export function CatererCard({ c }) {
       </div>
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-semibold text-foreground truncate">{c.name}</h3>
+          <h3 className="font-semibold text-foreground truncate">{c.display_id || c.id}</h3>
           <div className="text-right text-xs text-muted-foreground shrink-0">
             {reviewCount > 0 ? `${reviewCount} reviews` : "New on CatererCo"}
           </div>
