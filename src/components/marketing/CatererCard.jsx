@@ -37,7 +37,6 @@ export function CatererCard({ c }) {
             {reviewCount > 0 ? `${reviewCount} reviews` : "New on CatererCo"}
           </div>
         </div>
-        <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="h-3 w-3" /> {c.location || c.emirate || "Dubai"}</p>
         <div className="mt-3 flex flex-wrap gap-1.5">
           {(c.tags || []).map((t) => <Badge key={t} variant="default">{t}</Badge>)}
         </div>

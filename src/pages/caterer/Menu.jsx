@@ -14,7 +14,25 @@ import { parseSpreadsheetMenu } from "@/lib/csvParser";
 import { AED } from "@/lib/format";
 import { DietaryBadge } from "@/components/ui/Badge";
 
-const CATEGORIES = ["Starters", "Main Course", "Desserts", "Beverages", "Salads", "Soups", "Grills"];
+const CATEGORIES = [
+  "Biryani & Rice",
+  "Tandoori & Grills",
+  "Tandoor Breads & Roti",
+  "Salads & Raita",
+  "Soups & Shorba",
+  "Desserts & Mithai",
+  "Beverages",
+  "Live Stations",
+  "Starters",
+  "Main Course",
+  "Desserts",
+  "Salads",
+  "Soups",
+  "Grills",
+  "Sides",
+  "Breakfast",
+  "Other / Custom"
+];
 const CUISINE_OPTIONS = [
   "North Indian",
   "South Indian",
@@ -534,6 +552,9 @@ export default function CatererMenu() {
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                 >
+                  {category && !CATEGORIES.includes(category) && (
+                    <option value={category}>{category}</option>
+                  )}
                   {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </Field>
@@ -736,6 +757,9 @@ export default function CatererMenu() {
                                 value={editForm.category}
                                 onChange={(e) => setEditForm((f) => ({ ...f, category: e.target.value }))}
                               >
+                                {editForm.category && !CATEGORIES.includes(editForm.category) && (
+                                  <option value={editForm.category}>{editForm.category}</option>
+                                )}
                                 {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                               </select>
                             </Field>

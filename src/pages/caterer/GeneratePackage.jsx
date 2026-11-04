@@ -410,7 +410,23 @@ const DEFAULT_CUISINES = [
 ];
 
 const DEFAULT_CATEGORIES = [
-  "Starters", "Main Course", "Desserts", "Beverages", "Salads", "Grills", "Sides", "Breakfast"
+  "Biryani & Rice",
+  "Tandoori & Grills",
+  "Tandoor Breads & Roti",
+  "Salads & Raita",
+  "Soups & Shorba",
+  "Desserts & Mithai",
+  "Beverages",
+  "Live Stations",
+  "Starters",
+  "Main Course",
+  "Desserts",
+  "Salads",
+  "Soups",
+  "Grills",
+  "Sides",
+  "Breakfast",
+  "Other / Custom"
 ];
 
 

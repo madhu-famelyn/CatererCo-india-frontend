@@ -403,7 +403,7 @@ export default function FoodCategoriesSelector({
               onClick={() => handleToggleCategory(cat.id)}
               className={`relative flex flex-col justify-between rounded-xl border transition-all cursor-pointer select-none ${
                 isSelected
-                  ? "col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4 border-emerald-600 bg-emerald-50/25 dark:bg-emerald-950/20 shadow-sm ring-1 ring-emerald-600/30 p-4 space-y-3.5"
+                  ? "col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4 border-emerald-600 bg-emerald-50/25 dark:bg-emerald-950/20 shadow-sm ring-1 ring-emerald-600/30 p-3.5 sm:p-4 space-y-3.5 overflow-hidden"
                   : "border-border bg-card hover:border-border/80 hover:bg-muted/30 p-3.5"
               }`}
             >
@@ -492,29 +492,44 @@ export default function FoodCategoriesSelector({
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className={`grid gap-3.5 ${
+                    count === 1
+                      ? "grid-cols-1 max-w-md"
+                      : count === 2
+                      ? "grid-cols-1 sm:grid-cols-2"
+                      : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                  }`}>
                     {Array.from({ length: count }).map((_, idx) => {
                       const slot = currentConfig.slots?.[idx] || { dietary: "any", cuisine: "", customCuisine: "", preference: "" };
 
                       return (
                         <div
                           key={idx}
-                          className="rounded-lg border border-border bg-background p-3 space-y-2.5 shadow-2xs"
+                          className="rounded-xl border border-border/80 bg-background p-3.5 space-y-3 shadow-2xs min-w-0 overflow-hidden"
                         >
-                          {/* Top row: Slot title & Dietary Pills */}
-                          <div className="flex items-center justify-between gap-1 flex-wrap">
-                            <span className="text-xs font-semibold text-foreground">
+                          {/* Slot Header */}
+                          <div className="flex items-center gap-2 pb-2 border-b border-border/50">
+                            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600/10 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold">
+                              {idx + 1}
+                            </span>
+                            <span className="text-xs font-bold text-foreground truncate" title={`${displayLabel} #${idx + 1}`}>
                               {displayLabel} #{idx + 1}
                             </span>
-                            {/* Dietary Toggle Pills */}
-                            <div className="inline-flex rounded-md border border-border bg-muted/60 p-0.5 text-[10px] shrink-0">
+                          </div>
+
+                          {/* Dietary Selection (Veg / Non-Veg / Any) - Full width responsive segmented control */}
+                          <div className="space-y-1.5">
+                            <label className="text-[11px] font-semibold text-muted-foreground block">
+                              Dietary Preference
+                            </label>
+                            <div className="grid grid-cols-3 gap-1 rounded-lg border border-border/80 bg-muted/40 p-1 text-xs">
                               <button
                                 type="button"
                                 onClick={() => handleUpdateSlotDietary(cat.id, idx, "any")}
-                                className={`rounded px-1.5 py-0.5 font-medium transition ${
+                                className={`min-w-0 rounded-md py-1.5 px-1 font-medium transition text-center truncate ${
                                   slot.dietary === "any"
-                                    ? "bg-background text-foreground font-bold shadow-2xs"
-                                    : "text-muted-foreground hover:text-foreground"
+                                    ? "bg-background text-foreground font-bold shadow-xs border border-border/60"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-background/40"
                                 }`}
                               >
                                 Any
@@ -522,24 +537,26 @@ export default function FoodCategoriesSelector({
                               <button
                                 type="button"
                                 onClick={() => handleUpdateSlotDietary(cat.id, idx, "veg")}
-                                className={`rounded px-1.5 py-0.5 font-medium transition ${
+                                className={`min-w-0 rounded-md py-1.5 px-1 font-medium transition text-center flex items-center justify-center gap-1 ${
                                   slot.dietary === "veg"
-                                    ? "bg-emerald-600 text-white font-bold shadow-2xs"
-                                    : "text-emerald-700 dark:text-emerald-400 hover:text-emerald-800"
+                                    ? "bg-emerald-600 text-white font-bold shadow-xs"
+                                    : "text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 hover:bg-emerald-500/10"
                                 }`}
                               >
-                                🌱 Veg
+                                <span className="shrink-0 text-xs">🌱</span>
+                                <span className="font-semibold truncate">Veg</span>
                               </button>
                               <button
                                 type="button"
                                 onClick={() => handleUpdateSlotDietary(cat.id, idx, "non-veg")}
-                                className={`rounded px-1.5 py-0.5 font-medium transition ${
+                                className={`min-w-0 rounded-md py-1.5 px-1 font-medium transition text-center flex items-center justify-center gap-1 ${
                                   slot.dietary === "non-veg"
-                                    ? "bg-rose-600 text-white font-bold shadow-2xs"
-                                    : "text-rose-700 dark:text-rose-400 hover:text-rose-800"
+                                    ? "bg-rose-600 text-white font-bold shadow-xs"
+                                    : "text-rose-700 dark:text-rose-400 hover:text-rose-800 hover:bg-rose-500/10"
                                 }`}
                               >
-                                🍗 Non-Veg
+                                <span className="shrink-0 text-xs">🍗</span>
+                                <span className="font-semibold truncate">Non-Veg</span>
                               </button>
                             </div>
                           </div>
@@ -548,7 +565,7 @@ export default function FoodCategoriesSelector({
                           {activeCuisineLabels.length > 0 && (
                             <div className="space-y-1">
                               <label className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
-                                <ChefHat className="h-3 w-3 text-emerald-600" />
+                                <ChefHat className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                                 Item Cuisine
                               </label>
                               {activeCuisineLabels.length === 1 ? (
@@ -581,7 +598,7 @@ export default function FoodCategoriesSelector({
                               value={slot.preference || ""}
                               onChange={(e) => handleUpdateSlotPreference(cat.id, idx, e.target.value)}
                               placeholder={`e.g. Specific dish preference...`}
-                              className="h-8 w-full rounded-md border border-input bg-surface px-2.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-emerald-500"
+                              className="h-8 w-full min-w-0 rounded-md border border-input bg-surface px-2.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-emerald-500"
                             />
                           </div>
                         </div>

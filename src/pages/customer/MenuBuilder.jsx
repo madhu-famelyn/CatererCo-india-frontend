@@ -221,8 +221,8 @@ export default function MenuBuilder() {
         dishNameLower.includes("sandwich") || dishNameLower.includes("burger") || dishNameLower.includes("wrap") || dishNameLower.includes("slider");
     }
     if (target === "pasta") {
-      return catLower.includes("pasta") || catLower.includes("spaghetti") || catLower.includes("penne") || catLower.includes("lasagna") || catLower.includes("ravioli") ||
-        dishNameLower.includes("pasta") || dishNameLower.includes("spaghetti") || dishNameLower.includes("penne") || dishNameLower.includes("lasagna");
+      return catLower.includes("pasta") || catLower.includes("spaghetti") || catLower.includes("penne") || catLower.includes("lasagna") || catLower.includes("ravioli") || catLower.includes("noodle") ||
+        dishNameLower.includes("pasta") || dishNameLower.includes("spaghetti") || dishNameLower.includes("penne") || dishNameLower.includes("noodle");
     }
     if (target === "pizza") {
       return catLower.includes("pizza") || catLower.includes("flatbread") || dishNameLower.includes("pizza") || dishNameLower.includes("flatbread");
@@ -231,43 +231,43 @@ export default function MenuBuilder() {
       return catLower.includes("main") || catLower.includes("course") || catLower.includes("curry") || catLower.includes("rice") || catLower.includes("biryani") || catLower.includes("platter") || catLower.includes("stew") || catLower.includes("roast");
     }
     if (target === "cold_starters" || target.includes("cold starter")) {
-      return catLower.includes("cold starter") || catLower.includes("cold appetizer") || catLower.includes("hummus") || catLower.includes("moutabal") || catLower.includes("mezze") || catLower.includes("dip") || catLower.includes("carpaccio") || catLower.includes("canape") ||
-        dishNameLower.includes("hummus") || dishNameLower.includes("moutabal") || dishNameLower.includes("mezze") || dishNameLower.includes("carpaccio");
+      return catLower.includes("cold starter") || catLower.includes("cold appetizer") || catLower.includes("hummus") || catLower.includes("moutabal") || catLower.includes("mezze") || catLower.includes("dip") || catLower.includes("carpaccio") || catLower.includes("canape") || catLower.includes("chaat") ||
+        dishNameLower.includes("hummus") || dishNameLower.includes("moutabal") || dishNameLower.includes("mezze") || dishNameLower.includes("chaat");
     }
     if (target === "hot_starters" || target.includes("hot starter") || target === "starters") {
       return catLower.includes("hot starter") || catLower.includes("hot appetizer") || catLower.includes("starter") || catLower.includes("appetizer") || catLower.includes("wing") || catLower.includes("samosa") || catLower.includes("spring roll") || catLower.includes("kibbeh") || catLower.includes("croquette") || catLower.includes("falafel") ||
-        dishNameLower.includes("wing") || dishNameLower.includes("samosa") || dishNameLower.includes("spring roll") || dishNameLower.includes("kibbeh") || dishNameLower.includes("falafel");
+        dishNameLower.includes("samosa") || dishNameLower.includes("spring roll") || dishNameLower.includes("starter");
     }
     if (target === "oven" || target.includes("oven") || target.includes("bakery")) {
-      return catLower.includes("oven") || catLower.includes("bakery") || catLower.includes("bread") || catLower.includes("naan") || catLower.includes("roti") || catLower.includes("manakish") || catLower.includes("pie") || catLower.includes("quiche") ||
-        dishNameLower.includes("bread") || dishNameLower.includes("naan") || dishNameLower.includes("roti") || dishNameLower.includes("manakish");
+      return catLower.includes("oven") || catLower.includes("bakery") || catLower.includes("bread") || catLower.includes("naan") || catLower.includes("roti") || catLower.includes("paratha") || catLower.includes("kulcha") || catLower.includes("manakish") ||
+        dishNameLower.includes("bread") || dishNameLower.includes("naan") || dishNameLower.includes("roti") || dishNameLower.includes("paratha") || dishNameLower.includes("kulcha");
     }
     if (target === "grill" || target.includes("grill") || target.includes("bbq")) {
       return catLower.includes("grill") || catLower.includes("bbq") || catLower.includes("kebab") || catLower.includes("tandoor") || catLower.includes("tikka") ||
-        dishNameLower.includes("grill") || dishNameLower.includes("bbq") || dishNameLower.includes("kebab") || dishNameLower.includes("tikka") || dishNameLower.includes("skewer") || dishNameLower.includes("chops");
+        dishNameLower.includes("grill") || dishNameLower.includes("bbq") || dishNameLower.includes("kebab") || dishNameLower.includes("tikka") || dishNameLower.includes("skewer") || dishNameLower.includes("tandoori");
     }
-    if (target === "middle_eastern" || target.includes("iraqi") || target.includes("middle eastern")) {
-      return catLower.includes("iraqi") || catLower.includes("middle eastern") || catLower.includes("arabic") || catLower.includes("mandi") || catLower.includes("ouzi") || catLower.includes("kabsa") || catLower.includes("shawarma") || catLower.includes("machboos") ||
-        dishNameLower.includes("mandi") || dishNameLower.includes("ouzi") || dishNameLower.includes("kabsa") || dishNameLower.includes("shawarma") || dishNameLower.includes("machboos") || dishNameLower.includes("iraqi");
+    if (target === "middle_eastern" || target.includes("middle_eastern") || target.includes("biryani") || target.includes("rice") || target.includes("mandi")) {
+      return catLower.includes("biryani") || catLower.includes("rice") || catLower.includes("pulao") || catLower.includes("mandi") || catLower.includes("ouzi") || catLower.includes("kabsa") || catLower.includes("shawarma") || catLower.includes("machboos") || catLower.includes("iraqi") || catLower.includes("middle eastern") || catLower.includes("arabic") ||
+        dishNameLower.includes("biryani") || dishNameLower.includes("rice") || dishNameLower.includes("mandi") || dishNameLower.includes("ouzi") || dishNameLower.includes("kabsa");
     }
     if (target === "sides" || target.includes("side")) {
       return catLower.includes("side") || catLower.includes("fries") || catLower.includes("wedge") || catLower.includes("mashed") ||
-        dishNameLower.includes("fries") || dishNameLower.includes("wedges") || dishNameLower.includes("mashed potato");
+        dishNameLower.includes("fries");
     }
     if (target === "desserts" || target.includes("dessert")) {
-      return catLower.includes("dessert") || catLower.includes("sweet") || catLower.includes("cake") || catLower.includes("pastry") || catLower.includes("pie") || catLower.includes("ice cream") || catLower.includes("fondant") || catLower.includes("creme") || catLower.includes("kunafa") || catLower.includes("baklava") || catLower.includes("umm ali") ||
-        dishNameLower.includes("dessert") || dishNameLower.includes("cake") || dishNameLower.includes("kunafa") || dishNameLower.includes("baklava") || dishNameLower.includes("umm ali") || dishNameLower.includes("sweet");
+      return catLower.includes("dessert") || catLower.includes("sweet") || catLower.includes("mithai") || catLower.includes("cake") || catLower.includes("pastry") || catLower.includes("ice cream") || catLower.includes("fondant") || catLower.includes("creme") || catLower.includes("kunafa") || catLower.includes("baklava") || catLower.includes("umm ali") ||
+        dishNameLower.includes("dessert") || dishNameLower.includes("sweet") || dishNameLower.includes("mithai") || dishNameLower.includes("cake");
     }
     if (target === "soups" || target.includes("soup")) {
-      return catLower.includes("soup") || catLower.includes("shorba") || catLower.includes("chowder") || catLower.includes("broth") ||
-        dishNameLower.includes("soup") || dishNameLower.includes("shorba") || dishNameLower.includes("chowder");
+      return catLower.includes("soup") || catLower.includes("shorba") || catLower.includes("chowder") || catLower.includes("broth") || catLower.includes("rasam") ||
+        dishNameLower.includes("soup") || dishNameLower.includes("shorba") || dishNameLower.includes("rasam");
     }
     if (target === "beverages" || target.includes("beverage") || target.includes("drink")) {
-      return catLower.includes("beverage") || catLower.includes("drink") || catLower.includes("juice") || catLower.includes("tea") || catLower.includes("coffee") || catLower.includes("cocktail") || catLower.includes("mocktail") || catLower.includes("chai") || catLower.includes("mojito") ||
-        dishNameLower.includes("juice") || dishNameLower.includes("drink") || dishNameLower.includes("cocktail") || dishNameLower.includes("mocktail") || dishNameLower.includes("mojito") || dishNameLower.includes("tea") || dishNameLower.includes("coffee");
+      return catLower.includes("beverage") || catLower.includes("drink") || catLower.includes("juice") || catLower.includes("tea") || catLower.includes("coffee") || catLower.includes("chai") || catLower.includes("cocktail") || catLower.includes("mocktail") || catLower.includes("mojito") ||
+        dishNameLower.includes("juice") || dishNameLower.includes("drink") || dishNameLower.includes("tea") || dishNameLower.includes("coffee") || dishNameLower.includes("chai");
     }
     if (target === "live_stations" || target.includes("live")) {
-      return catLower.includes("live") || catLower.includes("station") || dishNameLower.includes("live") || dishNameLower.includes("station");
+      return catLower.includes("live") || catLower.includes("station") || catLower.includes("chaat counter") || dishNameLower.includes("live") || dishNameLower.includes("station");
     }
     if (target === "other") {
       const custom = String(draft.customCategory || "").trim().toLowerCase();
@@ -364,7 +364,7 @@ export default function MenuBuilder() {
   // Filter caterers & their menu items strictly based on:
   // 1. Minimum Order Requirement (plates / guests): caterers requiring more than the customer's guest count are strictly excluded
   // 2. Customer's demanded cuisines
-  // 3. Customer's selected food categories
+  // 3. Customer's selected food categories (ALL must be covered)
   // 4. Specific dish keyword demand (e.g. Biryani)
   const displayedCatererMenus = useMemo(() => {
     if (!allMenusData || allMenusData.length === 0) return [];
@@ -377,10 +377,9 @@ export default function MenuBuilder() {
     const matched = [];
 
     allMenusData.forEach((catererMenu) => {
-      // 1. STRICT Minimum Order / Plates Requirement
+      // 1. Minimum Order / Plates Requirement
       const catererMinPlates = Number(catererMenu.min_order_plates ?? catererMenu.min_plates ?? 0);
       if (catererMinPlates > 0 && customerGuests < catererMinPlates) {
-        // Customer requested fewer plates than caterer's required minimum -> exclude this caterer
         return;
       }
 
@@ -390,26 +389,27 @@ export default function MenuBuilder() {
         return;
       }
 
-      // Filter dishes in each category so ONLY matching dishes are included
-      const filteredItems = {};
-      let totalMatchingDishes = 0;
-
-      // Check if this caterer explicitly serves any of the customer's preferred cuisines
+      // Check if caterer matches user's preferred cuisines via cuisine_types only
       const catererCuisineTypes = (catererMenu.cuisine_types || []).map((c) => String(c).toLowerCase().trim());
-      const catererMatchesCuisine = !hasCuisinesFilter || preferredCuisines.some((p) => {
-        const pl = p.toLowerCase().trim();
-        return catererCuisineTypes.some((ct) => ct.includes(pl) || pl.includes(ct));
-      });
 
-      // 1. Cuisine Match Requirement: Exclude caterer if they do not match requested cuisines
+      const catererMatchesCuisine = !hasCuisinesFilter ||
+        catererCuisineTypes.length === 0 ||
+        preferredCuisines.some((p) => {
+          const pLower = String(p).toLowerCase().trim();
+          return catererCuisineTypes.some((ct) => ct.includes(pLower) || pLower.includes(ct));
+        });
+
       if (hasCuisinesFilter && !catererMatchesCuisine) {
         return;
       }
 
+      // Filter dishes in each category
+      const filteredItems = {};
+      let totalMatchingDishes = 0;
+
       if (catererMenu.items) {
         Object.entries(catererMenu.items).forEach(([cat, dishes]) => {
           const matchingDishes = (dishes || []).filter((d) => isDishMatchingFilters(d, cat, catererMatchesCuisine));
-
           if (matchingDishes.length > 0) {
             filteredItems[cat] = matchingDishes;
             totalMatchingDishes += matchingDishes.length;
@@ -417,25 +417,26 @@ export default function MenuBuilder() {
         });
       }
 
-      // 2. Full Course Coverage Requirement: Caterer MUST have dishes in EVERY selected course/category
+      // If user selected categories, caterer must have dishes covering ALL selected courses (strict)
       if (hasCategoryFilter) {
-        const hasAllSelectedCourses = selectedCategories.every((reqCat) => {
+        const coversAllCategories = selectedCategories.every((reqCat) => {
           return Object.entries(filteredItems).some(([catName, dishes]) => {
             return checkCategoryMatch(reqCat, catName.toLowerCase()) && (dishes || []).length > 0;
           });
         });
 
-        if (!hasAllSelectedCourses) {
-          return; // Exclude caterer because they cannot fulfill all requested courses
+        if (!coversAllCategories) {
+          return;
         }
       }
 
-      // 3. Include caterer only if they fulfill all requirements
       if (totalMatchingDishes > 0) {
         matched.push({
           ...catererMenu,
           items: filteredItems,
         });
+      } else if (!hasCategoryFilter && !hasDishDemand) {
+        matched.push(catererMenu);
       }
     });
 
@@ -852,33 +853,31 @@ export default function MenuBuilder() {
 
   // Dynamically compute the currently selected Menu for the Quotation button
   const selectedMenuInfo = useMemo(() => {
-    if (activeCatererFilter === "all" || displayedCatererMenus.length === 0) {
+    if (displayedCatererMenus.length === 0) {
       return {
         isSelected: false,
         menuNum: null,
         code: "",
         text: "Select a Menu",
-        fullText: "Select a Menu to Get Quotation",
+        fullText: "Get Quotation",
       };
     }
-    const idx = displayedCatererMenus.findIndex((m) => m.caterer_id === activeCatererFilter);
-    if (idx === -1) {
-      return {
-        isSelected: false,
-        menuNum: null,
-        code: "",
-        text: "Select a Menu",
-        fullText: "Select a Menu to Get Quotation",
-      };
-    }
-    const caterer = displayedCatererMenus[idx];
+    const idx = activeCatererFilter === "all"
+      ? 0
+      : displayedCatererMenus.findIndex((m) => m.caterer_id === activeCatererFilter);
+    const validIdx = idx >= 0 ? idx : 0;
+    const caterer = displayedCatererMenus[validIdx];
     const code = getCatererCode(caterer);
+    const isSpecific = activeCatererFilter !== "all";
+
     return {
       isSelected: true,
-      menuNum: idx + 1,
+      menuNum: validIdx + 1,
       code,
-      text: `Menu ${idx + 1} (${code})`,
-      fullText: `Approve Menu ${idx + 1} (${code}) & Get Quotation`,
+      text: `Menu ${validIdx + 1} (${code})`,
+      fullText: isSpecific
+        ? `Approve Menu ${validIdx + 1} (${code}) & Get Quotation`
+        : `Approve Menu 1 (${code}) & Get Quotation`,
     };
   }, [activeCatererFilter, displayedCatererMenus]);
 
@@ -886,11 +885,12 @@ export default function MenuBuilder() {
     if (isSubmittingQuotation) return; // prevent double-click
     setIsSubmittingQuotation(true);
 
-    let selObj = allSelections[activeCatererFilter] || {};
+    const targetCaterer = (activeCatererFilter !== "all" && displayedCatererMenus.find(c => c.caterer_id === activeCatererFilter))
+      || displayedCatererMenus[0];
+    const catId = targetCaterer?.caterer_id || targetCaterer?.id || "c-4b4fdf";
+    let selObj = (catId && allSelections[catId]) || {};
     let dishIds = Object.values(selObj).flat();
     let dishes = dishIds.map((id) => allDishMap[id]).filter(Boolean);
-    const catererMenu = displayedCatererMenus.find(c => c.caterer_id === activeCatererFilter) || displayedCatererMenus[0];
-    const catId = catererMenu?.caterer_id || catererMenu?.id || activeCatererFilter || "c-4b4fdf";
     const totalAmount = dishes.reduce((sum, d) => sum + (Number(d.price) || 0) * guests, 0) || (draft.perPersonBudget || 500) * guests;
 
     set({
@@ -930,7 +930,7 @@ export default function MenuBuilder() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-[var(--primary)]" />
-        <span className="ml-3 text-muted-foreground">Loading live menus from database…</span>
+        <span className="ml-3 text-muted-foreground">Loading, please wait...</span>
       </div>
     );
   }
@@ -959,7 +959,7 @@ export default function MenuBuilder() {
             <span className="inline-flex items-center rounded-md bg-[var(--primary)]/10 px-2 py-0.5 text-xs font-mono font-bold text-[var(--primary)] border border-[var(--primary)]/25 shadow-2xs">
               Code: {catererCode}
             </span>
-            <span className="text-xs text-muted-foreground">({catererMenu.caterer_name || "Caterer"} · {allItems.length} dishes in DB)</span>
+            <span className="text-xs text-muted-foreground">({catererMenu.caterer_name || "Caterer"} · {allItems.length} dishes available)</span>
             {catererCuisines.length > 0 && (
               <div className="flex items-center gap-1 ml-1 flex-wrap">
                 {catererCuisines.map((c) => (
@@ -1068,8 +1068,8 @@ export default function MenuBuilder() {
                   </span>
                 )}
               </div>
-              <div className="overflow-hidden rounded-xl border border-border">
-                <table className="w-full text-sm">
+              <div className="overflow-x-auto rounded-xl border border-border w-full">
+                <table className="w-full min-w-[580px] text-sm">
                   <thead>
                     <tr className="border-b border-border bg-muted/50">
                       <th className="w-10 px-3 py-2 text-left"></th>
@@ -1214,12 +1214,12 @@ export default function MenuBuilder() {
           const perPersonEquiv = Math.round(selectedSubtotal / (guests || 1));
 
           return (
-            <div className="rounded-xl border-2 border-border bg-muted/20 px-4 py-3 flex items-center justify-between">
-              <div className="space-y-0.5">
-                <div className="text-sm font-bold">{menuLabel} — Plate Total</div>
+            <div className="rounded-xl border-2 border-border bg-muted/20 px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="space-y-0.5 min-w-0">
+                <div className="text-sm font-bold truncate">{menuLabel} — Plate Total</div>
                 <div className="text-xs text-muted-foreground">Full menu items cost: {AED(menuTotalAll)} / person</div>
               </div>
-              <div className="text-right">
+              <div className="sm:text-right">
                 {selectedItems.length > 0 ? (
                   <div className="space-y-0.5">
                     <div className="font-display text-xl font-bold text-[var(--primary)]">
@@ -1242,44 +1242,39 @@ export default function MenuBuilder() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
       {/* Top nav */}
-      <div className="border-b border-border bg-surface shadow-xs">
-        <div className="mx-auto flex max-w-7xl flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center gap-3">
+      <div className="border-b border-border bg-surface shadow-xs w-full">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <Link to="/events/new">
-              <Button variant="ghost" size="sm" className="h-9 px-2.5 sm:px-3 text-xs sm:text-sm font-semibold">
+              <Button variant="ghost" size="sm" className="h-9 px-2.5 sm:px-3 text-xs sm:text-sm font-semibold shrink-0">
                 <ArrowLeft className="h-4 w-4 mr-1" /> Back
               </Button>
             </Link>
-            <div>
-              <div className="font-display text-base sm:text-lg font-bold leading-tight">Menu Builder</div>
-              <div className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
+            <div className="min-w-0">
+              <div className="font-display text-base sm:text-lg font-bold leading-tight truncate">Menu Builder</div>
+              <div className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 truncate">
                 Browse menus from {displayedCatererMenus.length} matched caterers · {guests} guests
               </div>
             </div>
           </div>
-          {selectedMenuInfo.isSelected ? (
+          {selectedMenuInfo.isSelected && (
             <Button
               variant="gold"
               onClick={handleProceedToQuotation}
               disabled={isSubmittingQuotation}
-              className="w-full sm:w-auto font-bold text-xs sm:text-sm h-10 px-4 shadow-md hover:shadow-lg transition-all duration-200 justify-center disabled:opacity-70 disabled:cursor-not-allowed"
+              className="shrink-0 font-bold text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4 shadow-md hover:shadow-lg transition-all duration-200 justify-center disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isSubmittingQuotation ? (
                 <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> Sending Quotation…</>
               ) : (
-                <>{selectedMenuInfo.fullText} <ArrowRight className="h-4 w-4 ml-1.5 shrink-0" /></>
+                <>
+                  <span className="hidden sm:inline">{selectedMenuInfo.fullText}</span>
+                  <span className="sm:hidden">Get Quotation</span>
+                  <ArrowRight className="h-4 w-4 ml-1.5 shrink-0" />
+                </>
               )}
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              disabled
-              className="w-full sm:w-auto font-bold text-xs sm:text-sm h-10 px-4 opacity-50 cursor-not-allowed justify-center border-dashed border-border"
-              title="Please select a specific Menu (e.g. Menu 1, Menu 2) to get quotation"
-            >
-              Select a Menu to Get Quotation
             </Button>
           )}
         </div>
@@ -1287,9 +1282,9 @@ export default function MenuBuilder() {
 
       {/* ── Cuisine, Course & Dish Demand Matching Banner ── */}
       {(preferredCuisines.length > 0 || selectedCategories.length > 0 || specificDishKeywords.length > 0) && (
-        <div className="border-b border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-950/20 px-6 py-2.5">
+        <div className="border-b border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-950/20 px-4 sm:px-6 py-2.5 w-full">
           <div className="mx-auto max-w-7xl text-xs text-emerald-800 dark:text-emerald-200 font-medium flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span>
+            <span className="break-words">
               {preferredCuisines.length > 0 && (
                 <><strong>Demanded Cuisines:</strong> {preferredCuisines.join(" & ")} · </>
               )}
@@ -1313,8 +1308,8 @@ export default function MenuBuilder() {
 
       {/* Caterer filter tabs */}
       {catererTabs.length > 1 && (
-        <div className="border-b border-border bg-surface/60 sticky top-0 z-10">
-          <div className="mx-auto max-w-7xl px-6">
+        <div className="border-b border-border bg-surface/60 sticky top-0 z-10 w-full overflow-hidden">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="flex gap-1 overflow-x-auto py-2 scrollbar-none">
               {catererTabs.map((tab) => {
                 const stats = tab.id === "all" ? null : getMenuStats(tab.id);
@@ -1345,23 +1340,23 @@ export default function MenuBuilder() {
         </div>
       )}
 
-      <div className="mx-auto grid max-w-7xl gap-8 px-6 py-8 lg:grid-cols-[1fr_360px]">
-        <div className="space-y-8">
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 py-6 sm:py-8 lg:grid-cols-[1fr_360px] w-full min-w-0">
+        <div className="space-y-8 min-w-0 w-full">
           {/* Unified Event & Quotation Preferences Bar with Edit button */}
-          <Card className="border-border bg-surface p-5 shadow-sm space-y-4">
+          <Card className="border-border bg-surface p-4 sm:p-5 shadow-sm space-y-4 overflow-hidden w-full">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border/60 pb-3">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[var(--primary)] text-white shadow">
                   <SlidersHorizontal className="h-5 w-5" />
                 </div>
-                <div>
-                  <div className="font-semibold text-sm">Quotation Preferences &amp; Parameters</div>
+                <div className="min-w-0">
+                  <div className="font-semibold text-sm truncate">Quotation Preferences &amp; Parameters</div>
                   <div className="text-xs text-muted-foreground mt-0.5">
                     Your active event parameters used to calculate menu recommendations and per-plate pricing.
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap shrink-0">
                 <Button
                   size="sm"
                   variant="outline"
@@ -1384,7 +1379,7 @@ export default function MenuBuilder() {
             </div>
 
             {/* Badges / summary grid */}
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-xs">
+            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 text-xs">
               <div className="rounded-xl border border-border bg-background p-3 flex flex-col justify-between">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
                   <Users className="h-3 w-3 text-[var(--primary)]" /> Guest Count &amp; Location
@@ -1445,12 +1440,12 @@ export default function MenuBuilder() {
                   No caterers currently have dishes matching{" "}
                   {preferredCuisines.length > 0 && <strong className="text-foreground">{preferredCuisines.join(" & ")} </strong>}
                   {selectedCategories.length > 0 && (
-                    <span>in <strong>{selectedCategories.join(", ")}</strong> </span>
+                    <span>in <strong>{selectedCategories.map((c) => (c === "other" && draft.customCategory ? draft.customCategory : c.charAt(0).toUpperCase() + c.slice(1))).join(", ")}</strong> </span>
                   )}
                   {specificDishKeywords.length > 0 && (
                     <span>for <strong>"{draft.specificDishes}"</strong> </span>
                   )}
-                  in the database.
+                  currently available.
                 </p>
                 <Button
                   variant="outline"
@@ -1890,7 +1885,7 @@ export default function MenuBuilder() {
       {/* ── Edit Preferences Modal ─────────────────────────────────── */}
       {isEditingPreferences && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg rounded-2xl border border-border bg-surface p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
+          <div className="relative w-full max-w-2xl lg:max-w-3xl rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
             <button
               onClick={() => setIsEditingPreferences(false)}
               className="absolute right-4 top-4 rounded-lg p-1.5 hover:bg-muted text-muted-foreground hover:text-foreground transition"

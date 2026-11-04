@@ -42,10 +42,16 @@ async function extractLines(file) {
  * Guess a category from a heading line.
  */
 const KNOWN_CATEGORIES = [
-  "starter", "starters", "appetizer", "appetizers", "salad", "salads",
-  "soup", "soups", "main", "mains", "main course", "grill", "grills",
-  "dessert", "desserts", "sweet", "beverage", "beverages", "drink",
-  "drinks", "sides", "bread", "breakfast", "lunch", "dinner",
+  "starters & kebabs", "starter", "starters", "kebab", "kebabs", "appetizer", "appetizers",
+  "main course curries", "main course", "main", "mains", "curry", "curries",
+  "biryani & rice", "biryani", "rice", "pulao",
+  "tandoori & grills", "tandoori", "grill", "grills",
+  "tandoor breads & roti", "bread", "breads", "roti", "naan", "paratha",
+  "salads & raita", "salad", "salads", "raita",
+  "soups & shorba", "soup", "soups", "shorba",
+  "desserts & mithai", "dessert", "desserts", "sweet", "sweets", "mithai",
+  "beverages", "beverage", "drink", "drinks",
+  "live stations", "live station", "sides", "breakfast", "lunch", "dinner",
 ];
 function detectCategory(line) {
   const l = line.toLowerCase().replace(/[^a-z ]/g, "").trim();
