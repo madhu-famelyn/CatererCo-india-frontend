@@ -86,6 +86,7 @@ export default function CatererDetail() {
   const startingPrice = c.starting_from || c.startingFrom || 65;
   const tagsList = c.tags || ["Luxury", "Weddings"];
   const certsList = c.certifications || ["HACCP Certified", "FSSAI Registered"];
+  const customServices = Array.isArray(c.custom_services) ? c.custom_services : [];
 
   return (
     <div className="min-h-screen bg-background pb-16">
@@ -175,6 +176,29 @@ export default function CatererDetail() {
                     {c.about || "Leading luxury catering service providing tailored menus, live cooking stations, and traditional Emirati & international hospitality for corporate events, weddings, majlis, and private parties."}
                   </p>
                 </div>
+
+                {customServices.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                      <Utensils className="h-4 w-4 text-primary" /> Additional Services
+                    </h3>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {customServices.map((service, index) => (
+                        <div
+                          key={`${service.name}-${index}`}
+                          className="flex items-center justify-between gap-3 rounded-xl border border-border bg-background p-3"
+                        >
+                          <span className="text-sm font-medium">{service.name}</span>
+                          {service.price != null && (
+                            <span className="shrink-0 text-xs text-muted-foreground">
+                              ₹{service.price}{service.price_unit ? ` / ${service.price_unit}` : ""}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Certifications & Food Safety */}
                 <div>

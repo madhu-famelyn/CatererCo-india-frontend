@@ -112,6 +112,24 @@ export default function CatererRegister() {
   const [buffetPrice, setBuffetPrice] = useState("");
   const [offersPackedDelivery, setOffersPackedDelivery] = useState(false);
   const [packedDeliveryPrice, setPackedDeliveryPrice] = useState("");
+  const [customServices, setCustomServices] = useState([]);
+
+  const addCustomService = () => {
+    setCustomServices((prev) => [
+      ...prev,
+      { id: `${Date.now()}-${Math.random()}`, name: "", price: "", priceUnit: "" },
+    ]);
+  };
+
+  const updateCustomService = (id, field, value) => {
+    setCustomServices((prev) =>
+      prev.map((service) => (service.id === id ? { ...service, [field]: value } : service))
+    );
+  };
+
+  const removeCustomService = (id) => {
+    setCustomServices((prev) => prev.filter((service) => service.id !== id));
+  };
 
   const toggleCuisine = (value) => {
     setSelectedCuisines((prev) =>
@@ -156,6 +174,14 @@ export default function CatererRegister() {
   };
 
   const onSubmit = async (data) => {
+    if (customServices.some((service) =>
+      !service.name.trim() ||
+      (service.price !== "" && (!Number.isFinite(Number(service.price)) || Number(service.price) < 0))
+    )) {
+      toast.error("Enter a valid service name and non-negative price, or remove the empty service.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const documentsList = [];
@@ -227,6 +253,11 @@ export default function CatererRegister() {
         buffet_price_per_plate: offersBuffet && buffetPrice !== "" ? Number(buffetPrice) : null,
         offers_packed_delivery: offersPackedDelivery,
         packed_delivery_price_per_box: offersPackedDelivery && packedDeliveryPrice !== "" ? Number(packedDeliveryPrice) : null,
+        custom_services: customServices.map((service) => ({
+          name: service.name.trim(),
+          price: service.price !== "" ? Number(service.price) : null,
+          price_unit: service.priceUnit.trim() || null,
+        })),
       };
 
       const res = await catererService.registerCaterer(payload);
@@ -873,6 +904,54 @@ export default function CatererRegister() {
               </div>
             )}
           </div>
+
+          {customServices.map((service) => (
+            <div key={service.id} className="rounded-xl border border-border/60 bg-background p-4">
+              <div className="grid gap-3 sm:grid-cols-[1fr_140px_1fr_auto] sm:items-end">
+                <Field label="Service name">
+                  <Input
+                    value={service.name}
+                    onChange={(e) => updateCustomService(service.id, "name", e.target.value)}
+                    placeholder="e.g. Corporate catering"
+                  />
+                </Field>
+                <Field label="Price (₹)">
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    value={service.price}
+                    onChange={(e) => updateCustomService(service.id, "price", e.target.value)}
+                    placeholder="Optional"
+                  />
+                </Field>
+                <Field label="Price unit">
+                  <Input
+                    value={service.priceUnit}
+                    onChange={(e) => updateCustomService(service.id, "priceUnit", e.target.value)}
+                    placeholder="e.g. per plate, per event"
+                  />
+                </Field>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeCustomService(service.id)}
+                  aria-label={`Remove ${service.name || "custom service"}`}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+
+          <button
+            type="button"
+            onClick={addCustomService}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-primary/50 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10 transition"
+          >
+            <Plus className="h-3.5 w-3.5" /> Add another service
+          </button>
         </div>
         {/* ─────────────────────────────────────────────────────────────── */}
 
